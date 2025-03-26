@@ -1,0 +1,28 @@
+{
+    "id": "6CE925A7",
+    "path": "~/Repos/MER_AEDatos/scripts/02.Rmd",
+    "project_path": "scripts/02.Rmd",
+    "type": "r_markdown",
+    "hash": "587650451",
+    "contents": "",
+    "dirty": false,
+    "created": 1742678988719.0,
+    "source_on_save": true,
+    "relative_order": 2,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "238,168",
+        "scrollLine": "235",
+        "last_setup_crc32": ""
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1742983156,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1742983156266,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,12 @@
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+__pycache__/
+*.html
+*.pdf
+*.docx
+*.xlsx
+*.csv~
+*.Rproj.user/
+renv/library/

@@ -1,0 +1,9 @@
+"0","library(tidyverse)
+
+# Cargar el dataset ori.csv
+# ../  corresponde a la carpeta que contiene scripts/ (Nivel superior)”
+datos <- read_csv(""../datasets/ori.csv"", delim="";"")
+"
+"2","Error in read_csv(""../datasets/ori.csv"", delim = "";"") : 
+  unused argument (delim = "";"")
+"
