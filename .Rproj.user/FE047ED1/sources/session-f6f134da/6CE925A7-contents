@@ -1,21 +1,41 @@
 ---
-title: "Taller 1 Analisis Estadistico de Datos"
-author: "Zahira Itzel Gonzalez Cleves, Diego Alejandro Mejia Montañez, Daniel Felipe Russi Aragon, Ivan Camilo Granados Niño, Andres Alfonso Osorio Marulanda"
+title: "Analisis Estadistico de Datos"
+author: "Grupo 05"
 date: "2025-03-22"
-output: html_document
+output: 
+  html_document: 
+    toc: true
+    theme: cosmo
+output_dir: "../docs"
 ---
 
+<!-- Para dejar limitadores visuales (lineas divisorias) usar ________________  -->
 <!-- Para dejar un salto de linea se deja un doble espacio al final  -->
+
+________________
+# Detalles
+**Taller 1: Análisis Estadístico de Datos**   
 **Maestría en Energías Renovables**  
 **Escuela de Ingeniería, Ciencia y Tecnología**  
 **Universidad del Rosario**  
+**Integrantes:**  
+Zahira Itzel González Cleves  
+Diego Alejandro Mejía Montañez  
+Daniel Felipe Russi Aragón  
+Iván Camilo Granados Niño  
+Andrés Alfonso Osorio Marulanda
 
-
+  
+________________  
 <pre>
-```{r setup, include=FALSE}
+```{r setup, echo=FALSE, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 </pre>
+
+rmarkdown::render("scripts/02.Rmd", output_dir = "docs")
+
+# Ejemplo (A eliminar)
 
 ## R Markdown
 
@@ -39,7 +59,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 
 
-
+# Desarrollo Taller
 
 ## Parte 1
 
@@ -84,6 +104,23 @@ Clasifique las variables 1) Pronóstico, 2) Municipio, 3) Temperatura y 4) Veloc
 * Municipio Municipio de medición
 * Temperatura Temperatura medida en grados centígrados.
 * Velocidad del viento Velocidad del viento medida en mph.
+
+
+Pronóstico del clima (Cualitativa)
+Clase: Politómicas.
+Escala: Ordinal.  
+
+Municipio de medición (Cualitativa)
+Clase: Politómicas.
+Escala: Nominal.  
+
+Temperatura medida en grados centígrados. (Cuantitativa)
+Clase: Discreta
+Escala: Intervalo.  
+
+Velocidad del viento medida en mph (Cuantitativa)
+Clase: Continua
+Escala: Razon.  
 
 
 ### Pregunta 4 
@@ -153,7 +190,30 @@ Daniel
 
 Para los registros recolectados a medio día, determine si existen o no observaciones atípicas univariadas para la variables Presión y Punto de Rocio usando el diagrama de caja de Tukey. ¿cuál variable presenta mayor número de atipicidades?
 
+<pre>
+```{r preg_06a, message=FALSE, warning=FALSE}
+MedioDia$Presion  <- gsub(",", ".", MedioDia$Presion )
+MedioDia$Presion  <- as.numeric(MedioDia$Presion )
+boxplot(MedioDia$Presion, horizontal=FALSE, main='Presion', ylab = 'bar')
 
+```
+
+>  
+> PENDIENTE DETALLE  
+>  
+
+<pre>
+```{r preg_06b, message=FALSE, warning=FALSE}
+MedioDia$Punto_de_Rocio  <- gsub(",", ".", MedioDia$Punto_de_Rocio )
+MedioDia$Punto_de_Rocio  <- as.numeric(MedioDia$Punto_de_Rocio )
+boxplot(MedioDia$Punto_de_Rocio, horizontal=FALSE, main='Punto de Rocio', ylab = '°C')
+
+```
+
+
+>  
+> PENDIENTE DETALLE  
+>  
 
 
 ### Pregunta 7  
@@ -208,6 +268,9 @@ $w_9=5$
 Zahira
 
 Para los registros recolectados a medio día, responda. Son estos datos ¿univariados, bivariados o multivariados?
+
+Estos datos son multivariados, ya que para el medio día, en varias ubicaciones de Colombia, se realizaron mediciones de múltiples variables como: temperatura, velocidad del viento, dirección del viento, presión, punto de rocío, cobertura total nubosa, precipitación, probabilidad de tormenta, humedad y pronóstico del clima.
+Esto quiere decir que para cada ubicación a las 12 del día, todas estas variables mencionadas fueron medidas, y ello hace que estos datos sean multivariados.
 
 
 
