@@ -5,14 +5,18 @@ date: "2025-03-22"
 output: 
   html_document: 
     toc: true
+    toc_float: true
     theme: cosmo
 output_dir: "../docs"
 ---
 
 <!-- Para dejar limitadores visuales (lineas divisorias) usar ________________  -->
 <!-- Para dejar un salto de linea se deja un doble espacio al final  -->
+<!-- con toc_float: true la table of contents queda a la izquierda   -->
+<!-- con rmarkdown::render("scripts/02.Rmd", output_dir = "docs") se logro poner el html en /docs 1 vez   -->
 
-________________
+________________  
+
 # Detalles
 **Taller 1: Análisis Estadístico de Datos**   
 **Maestría en Energías Renovables**  
@@ -25,39 +29,17 @@ Daniel Felipe Russi Aragón
 Iván Camilo Granados Niño  
 Andrés Alfonso Osorio Marulanda
 
-  
 ________________  
-<pre>
 ```{r setup, echo=FALSE, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-</pre>
 
-rmarkdown::render("scripts/02.Rmd", output_dir = "docs")
-
-# Ejemplo (A eliminar)
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r crear-carpeta-docs, include=FALSE}
+if (!dir.exists("../docs")) 
+{
+  dir.create("../docs")
+}
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
-
 
 # Desarrollo Taller
 
