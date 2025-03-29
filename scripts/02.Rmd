@@ -47,7 +47,6 @@ if (!dir.exists("../docs"))
 
 ### Pregunta 1
 $w_1=7$  
-Ivan
 
 Importe la base de datos a R y determine el número de UE y de variables en la base de datos. ¿Cuántas filas y cuántas columnas tiene la tabla?, ¿Cuántos registros fueron medidos o recolectados a medio día (hora = 12:00)?
 
@@ -80,7 +79,6 @@ Registros medio dia: 118
 
 ### Pregunta 2
 $w_2=7$  
-Ivan
 
 Para los registros recolectados a medio día ¿cuál es el pronóstico climático más frecuente? ¿cuál es el menos frecuente?
 
@@ -98,7 +96,6 @@ El más frecuente es parcialmente Nublado mientras que el menos frecuente es Par
 
 ### Pregunta 3 
 $w_3=7$  
-Ivan
 
 Clasifique las variables 1) Pronóstico, 2) Municipio, 3) Temperatura y 4) Velocidad del viento según su escala y clase, teniendo en cuenta que:
 
@@ -121,7 +118,6 @@ Clasifique las variables 1) Pronóstico, 2) Municipio, 3) Temperatura y 4) Veloc
 
 ### Pregunta 4 
 $w_4=7$  
-Zahira
 
 Para los registros recolectados a medio día, describa de manera gráfica la temperatura y la velocidad del viento univariadamente a partir de un diagrama de caja. ¿Qué características observa los datos en términos de centro, localización y dispersión?.
 
@@ -154,7 +150,6 @@ A continuación se muestra el diagrama boxplot de la velocidad de viento. La pri
 
 ### Pregunta 5 
 $w_5=7$  
-Zahira
 
 Para los registros recolectados a medio día, describa de manera numérica mediante la función `summary()` la temperatura y la velocidad del viento univariadamente. ¿Concuerda su descripción con los gráficos de boxplot previamente presentados?.
 
@@ -213,7 +208,6 @@ boxplot(MedioDia$Punto_de_Rocio, horizontal=FALSE, main='Punto de Rocio', ylab =
 
 ### Pregunta 7  
 $w_7=10$  
-Daniel
 
 Para los registros recolectados a medio día, describa de manera gráfica la asociación entre la temperatura y velocidad del viento a partir de un diagrama de dispersión entre las variables. Añada el histograma marginal de cada variable. ¿Parecen correlacionarse las dos variables?
 
@@ -261,7 +255,6 @@ g1
 
 ### Pregunta 8 
 $w_8=10$  
-Andres
 
 Para los registros recolectados a medio día, describa de manera numérica la asociación entre temperatura y velocidad del viento a partir de la covarianza y el coeficiente de correlación de Pearson. ¿Parecen correlacionarse las dos variables? ¿en qué unidades se encuentran cada una de las dos medidas anteriormente mencionadas?
 
@@ -300,7 +293,6 @@ En esta imagen tambien se puede mejorar el entendimeinto del `boxplot` del punto
 
 ### Pregunta 9 
 $w_9=5$  
-Zahira
 
 Para los registros recolectados a medio día, responda. Son estos datos ¿univariados, bivariados o multivariados?
 
@@ -313,7 +305,6 @@ Esto quiere decir que para cada ubicación a las 12 del día, todas estas variab
 
 ### Pregunta 10 
 $w_{10}=10$  
-Andres
 
 Para los registros recolectados a medio día, elabore la estimación histograma de la densidad y la estimación kernel de la densidad para la variable Temperatura. ¿Podría afirmar que los datos provienen de una distribución normal?
 
@@ -339,7 +330,6 @@ El grafico tambien muestra una estimación kernel de la densidad; tambien llamad
 
 ### Pregunta 11 
 $w_{11}=10$  
-Diego
 
 Para los registros recolectados a medio día, elabore la estimación histograma de la densidad y la estimación kernel de la densidad para la variable Presión ¿Es la distribución estimada simétrica? explique.
 
@@ -359,7 +349,6 @@ En este caso, la estimación de Kernel  de la densidad, tiene una distribución 
 
 ### Pregunta 12 
 $w_{12}=10$  
-Diego
 
 Para los registros recolectados a medio día, elabore la estimación kernel de la densidad para la variable Velocidad del viento. Sobreponga en su gráfico la función de densidad normal con la media y desviación estándar observada en sus datos. ¿Se aproxima el modelo normal estimado a la estimación de la densidad encontrada?
 
