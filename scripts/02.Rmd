@@ -175,7 +175,6 @@ Se observa que el mínimo y máximo coincide con las líneas del boxplot (o “b
 
 ### Pregunta 6 
 $w_6=10$  
-Daniel
 
 Para los registros recolectados a medio día, determine si existen o no observaciones atípicas univariadas para la variables Presión y Punto de Rocio usando el diagrama de caja de Tukey. ¿cuál variable presenta mayor número de atipicidades?
 
@@ -188,9 +187,16 @@ boxplot(MedioDia$Presion, horizontal=FALSE, main='Presion', ylab = 'bar')
 ```
 </pre>
 
->  
-> PENDIENTE DETALLE  
->  
+#### Outlier (círculo) 
+Hay un valor atípico por encima de los 1015 mmHg, lo que indica que hubo un registro de presión inusualmente alto comparado con la tendencia de los datos.
+
+#### Rango intercuartílico (caja gris)
+La caja representa el rango intercuartílico (Q1 a Q3), es decir, donde se encuentra el 50% central de los datos. Aproximadamente va de 1012 mmHg a 1013.5 mmHg.
+
+#### Bigotes
+El bigote inferior llega cerca de 1011 mmHg.  
+El bigote superior llega hasta un poco más de 1014 mmHg.
+
 
 <pre>
 ```{r preg_06b, message=FALSE, warning=FALSE}
@@ -201,9 +207,16 @@ boxplot(MedioDia$Punto_de_Rocio, horizontal=FALSE, main='Punto de Rocio', ylab =
 ```
 </pre>
 
->  
-> PENDIENTE DETALLE  
->  
+#### Mediana
+La línea negra dentro de la caja indica que la mediana está aproximadamente en 21-22°C.
+
+####   Rango intercuartílico 
+* Primer cuartil (Q1) alrededor de 19°C  
+*	Tercer cuartil (Q3) cerca de 24-25°C  
+*	Esto indica que el 50% central de los datos está entre 19°C y 25°C  
+
+#### Distribución
+La caja está ligeramente desplazada hacia la parte baja, mostrando una posible leve concentración de datos en valores bajos.
 
 
 ### Pregunta 7  
