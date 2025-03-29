@@ -60,20 +60,40 @@ library(tidyverse)
 # ../  corresponde a la carpeta que contiene scripts/ (Nivel superior)”
 # se uso read_csv2 porque el archivo lo leyo separado por ;
 datos <- read_csv2("../datasets/ori.csv")
+tabla=read.csv2("/Users/aosoriom/Repos/MER_AEDatos/datasets/ori.csv") #Lee el archivo csv. Antes tuve que reemplazarle al archivo los ; por ,
+MedioDia = tabla[tabla$Hora=="12:00",] #Crea tabla con la hora 12:00 solamente
 ```
 </pre>
 
 <pre>
 ```{r vista-previa , message=FALSE, warning=FALSE}
-summary(datos)
+summary(tabla)
 ```
 </pre>
+
+UE= Orinoquia=1 
+Variables=18
+Filas:4543
+Columnas:18
+Registros medio dia: 118
+
 
 ### Pregunta 2
 $w_2=7$  
 Ivan
 
 Para los registros recolectados a medio día ¿cuál es el pronóstico climático más frecuente? ¿cuál es el menos frecuente?
+
+<pre>
+```{r preg_02a, message=FALSE, warning=FALSE}
+library(dplyr)
+
+tabla %>%
+  count(Pronostico, sort = TRUE)
+```
+</pre>
+
+El más frecuente es parcialmente Nublado mientras que el menos frecuente es Parcialmente Nublado-Lluvia.
 
 
 ### Pregunta 3 
@@ -83,27 +103,21 @@ Ivan
 Clasifique las variables 1) Pronóstico, 2) Municipio, 3) Temperatura y 4) Velocidad del viento según su escala y clase, teniendo en cuenta que:
 
 * Pronóstico Pronóstico del clima.
+  * Cualitativa
+  * Clase: Politómicas.
+  * Escala: Ordinal.  
 * Municipio Municipio de medición
+  * Cualitativa
+  * Clase: Politómicas.
+  * Escala: Nominal  
 * Temperatura Temperatura medida en grados centígrados.
+  * Cuantitativa
+  * Clase: Discreta
+  * Escala: Intervalo  
 * Velocidad del viento Velocidad del viento medida en mph.
-
-
-Pronóstico del clima (Cualitativa)
-Clase: Politómicas.
-Escala: Ordinal.  
-
-Municipio de medición (Cualitativa)
-Clase: Politómicas.
-Escala: Nominal.  
-
-Temperatura medida en grados centígrados. (Cuantitativa)
-Clase: Discreta
-Escala: Intervalo.  
-
-Velocidad del viento medida en mph (Cuantitativa)
-Clase: Continua
-Escala: Razon.  
-
+  * Cuantitativa
+  * Clase: Continua
+  * Escala: Razon  
 
 ### Pregunta 4 
 $w_4=7$  
@@ -114,8 +128,6 @@ Para los registros recolectados a medio día, describa de manera gráfica la tem
 
 <pre>
 ```{r preg_04a, message=FALSE, warning=FALSE}
-tabla=read.csv2("/Users/aosoriom/Repos/MER_AEDatos/datasets/ori.csv") #Lee el archivo csv. Antes tuve que reemplazarle al archivo los ; por ,
-MedioDia = tabla[tabla$Hora=="12:00",] #Crea tabla con la hora 12:00 solamente
 MedioDia$Temperatura <- gsub(",", ".", MedioDia$Temperatura)
 MedioDia$Temperatura <- as.numeric(MedioDia$Temperatura)
 boxplot(MedioDia$Temperatura, horizontal = FALSE, main = 'Temperatura', ylab = '°C') #punto 4
@@ -123,7 +135,7 @@ boxplot(MedioDia$Temperatura, horizontal = FALSE, main = 'Temperatura', ylab = '
 ```
 </pre>
 
-**Temperatura**  
+#### Temperatura
 Del diagrama `boxplot` para los datos de medio día se observa que la temperatura media es aproximadamente 30°C, y que el histograma de los datos estaría sesgado hacia la derecha, es decir, los datos están más concentrados en temperaturas entre 30°C y 33°C. En contraposición, las temperaturas por debajo de 30°C tienen más dispersión.
 Del diagrama se puede concluir que las temperaturas más probables a medio día se encuentran aproximadamente entre 29°C y 31°C, que son los valores que delimitan la caja entre Q1 y Q3 del boxplot.
 De otra parte, no se observan valores altos de temperatura atípicos, mientras que sí se observan varios valores atípicos por debajo de 27°C aproximadamente.
@@ -136,7 +148,7 @@ boxplot(MedioDia$Velocidad_del_Viento ,horizontal = FALSE, main = 'Velocidad de 
 ```
 </pre>
 
-**Velocidad del viento**  
+#### Velocidad del viento  
 A continuación se muestra el diagrama boxplot de la velocidad de viento. La primera característica que salta a la vista es que no se encuentran valores atípicos en el conjunto de datos. En segundo lugar, la velocidad media del viento está entre 1.5m/s y 2m/s, visualmente puede indicarse aproximadamente 1.7m/s. Las velocidades de viento más usuales están entre aproximadamente 1m/s y 2.2m/s, y ligeramente con mayor concentración entre la media 1.7m/s y 2.2m/s.
 
 
@@ -179,6 +191,7 @@ MedioDia$Presion  <- as.numeric(MedioDia$Presion )
 boxplot(MedioDia$Presion, horizontal=FALSE, main='Presion', ylab = 'bar')
 
 ```
+</pre>
 
 >  
 > PENDIENTE DETALLE  
@@ -191,7 +204,7 @@ MedioDia$Punto_de_Rocio  <- as.numeric(MedioDia$Punto_de_Rocio )
 boxplot(MedioDia$Punto_de_Rocio, horizontal=FALSE, main='Punto de Rocio', ylab = '°C')
 
 ```
-
+</pre>
 
 >  
 > PENDIENTE DETALLE  
@@ -204,6 +217,46 @@ Daniel
 
 Para los registros recolectados a medio día, describa de manera gráfica la asociación entre la temperatura y velocidad del viento a partir de un diagrama de dispersión entre las variables. Añada el histograma marginal de cada variable. ¿Parecen correlacionarse las dos variables?
 
+<pre>
+```{r preg_07a, message=FALSE, warning=FALSE}
+#install.packages("tidyverse")# Aquí instalo mi propio paquete 
+#library(tidyverse)
+#install.packages("ggExtra") 
+
+## Filtrar datos de medio dia
+
+#ori_mediodia = ORI %>% 
+#  filter(Hora=="12:00") %>% 
+#  select(Temperatura , Velocidad_del_Viento)
+
+##Revisar si esta instalado GGextra y GGplot
+##realizar el codigo para la grafica de disperción
+library(ggExtra)
+g_base = ggplot(MedioDia, aes(x = Temperatura,
+                                    y = Velocidad_del_Viento)) + 
+  labs(title="Diagrama de dispersión de Temperatura VS Velocidad del viento") +
+  xlab("Temperatura (en °C) ") + 
+  ylab("Velocidad del Viento (en m/s)") + geom_smooth(method = "lm", se = FALSE, color = "red") +
+  geom_point()
+
+
+##Histograma marginal 
+g1 = ggMarginal(g_base, type = "histogram")
+g1
+```
+</pre>
+
+#### Relación entre Temperatura y Velocidad del Viento
+* La línea de tendencia roja, generada por una regresión lineal, muestra una pendiente muy baja, lo que sugiere que no hay una correlación fuerte entre la temperatura y la velocidad del viento.
+* El coeficiente de la pendiente parece ser cercano a cero, indicando que un aumento en la temperatura no implica un cambio significativo en la velocidad del viento.
+
+#### Distribución de los datos
+* Se observa una alta dispersión de los puntos, lo que sugiere una relación débil o inexistente entre ambas variables.
+* La velocidad del viento varía en un rango amplio incluso para temperaturas similares, lo que refuerza la falta de un patrón claro.
+
+#### Histogramas marginales
+* Se observa que la temperatura tiene una distribución concentrada entre 27°C y 32°C, con una mayor frecuencia en ese rango.
+* La velocidad del viento parece seguir una distribución asimétrica con valores más dispersos.
 
 
 ### Pregunta 8 
@@ -290,6 +343,19 @@ Diego
 
 Para los registros recolectados a medio día, elabore la estimación histograma de la densidad y la estimación kernel de la densidad para la variable Presión ¿Es la distribución estimada simétrica? explique.
 
+<pre>
+```{r preg_11a, message=FALSE, warning=FALSE}
+Hmedd2_dens = hist(MedioDia$Presion, prob=TRUE,
+              main = 'Histograma de presion para la hora del medio dia en la Orinoquia',
+              xlab = 'Intervalos de clase - Presión [mmHg]',
+              ylab = 'Densidad')
+lines(density(MedioDia$Presion),
+      lwd = 3,col="red")
+
+```
+</pre>
+
+En este caso, la estimación de Kernel  de la densidad, tiene una distribución estimada asimétrica con un sesgo a la derecha, es decir que la densidad de los datos de la derecha se encuentra mayormente alejados de  la media que se encuentra en 1012 de acuerdo al gráfico.
 
 ### Pregunta 12 
 $w_{12}=10$  
@@ -297,6 +363,21 @@ Diego
 
 Para los registros recolectados a medio día, elabore la estimación kernel de la densidad para la variable Velocidad del viento. Sobreponga en su gráfico la función de densidad normal con la media y desviación estándar observada en sus datos. ¿Se aproxima el modelo normal estimado a la estimación de la densidad encontrada?
 
+**Ayuda**: Desde R, sumar geom_density(data=datos_noon,aes(Velocidad_del_Viento)) a un ggplot preexistente, añade la kde de la variable de interés sobre el gráfico anterior. Revise el cuaderno de clase 1.   
+
+<pre>
+```{r preg_12a, message=FALSE, warning=FALSE}
+mean_Vel=mean(MedioDia$Velocidad_del_Viento)# encontrar el valor promedio de los datos = a mu 
+Var_Vel=var(MedioDia$Velocidad_del_Viento)# encontrar el valor de la varianza = a sigma
+f_normal_Velviento = function(x,mu,sigma) {(1/(2* pi * sigma^2)) * (exp(-0.5*((x-mu)/sigma)^2))}
+ggplot() + xlim(-1,5) + 
+geom_function(fun = f_normal_Velviento,args=list(mu=mean_Vel,sigma=Var_Vel) ,color = "blue")+
+ geom_density(data=MedioDia,aes(x=MedioDia$Velocidad_del_Viento)) +
+ labs(x="Velocidad del viento", y="Densidad")
+```
+</pre>
+
+Se aproxima un poco a la estimación de Kernel, pero se encuentran unas diferencias marcadas en la inforacion adicional que nos brinda con los picos que grafica Kernel donde se encuentra las mayores densidades de los intervalos de clase, en la gráfica negra se pueden observar 3 de estos picos. Por otro lado la grafica de densidad normal, las densidades se distribuyen de manera simétrica indicando que los datos no se encuentran tan dispersos dado que la curva no es aplanada sino por el contrario con un pico marcado o verosimilitud a una velocidad del viento estimada de 1.71 m/s que concuerda con el valor promedio de los datos de la velocidad del viento a las 12 de la tarde.
 
 ## Referencias
 
