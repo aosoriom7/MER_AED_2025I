@@ -3,12 +3,12 @@ title: "Analisis Estadistico de Datos"
 author: "Grupo 05"
 date: "2025-03-22"
 output:
-  pdf_document:
-    toc: true
   html_document:
     toc: true
     toc_float: true
     theme: cosmo
+  pdf_document:
+    toc: true
 output_dir: ../docs
 ---
 
@@ -125,7 +125,7 @@ MedioDia$Temperatura <- as.numeric(MedioDia$Temperatura)
 boxplot(MedioDia$Temperatura, horizontal = FALSE, main = 'Temperatura', ylab = '°C') #punto 4
 ```
 
-Del diagrama `boxplot` para los datos de medio día se observa que la temperatura media es aproximadamente 30°C, y que el histograma de los datos estaría sesgado hacia la derecha, es decir, los datos están más concentrados en temperaturas entre 30°C y 33°C. En contraposición, las temperaturas por debajo de 30°C tienen más dispersión.
+Del diagrama `boxplot` para los datos de medio día se observa que la temperatura media es aproximadamente 30°C, y que el histograma de los datos estaría sesgado hacia la izquierda, es decir, los datos están más concentrados en temperaturas entre 30°C y 33°C. En contraposición, las temperaturas por debajo de 30°C tienen más dispersión.
 Del diagrama se puede concluir que las temperaturas más probables a medio día se encuentran aproximadamente entre 29°C y 31°C, que son los valores que delimitan la caja entre Q1 y Q3 del boxplot.
 De otra parte, no se observan valores altos de temperatura atípicos, mientras que sí se observan varios valores atípicos por debajo de 27°C aproximadamente.
 
@@ -325,7 +325,7 @@ geom_function(fun = f_normal_Velviento,args=list(mu=mean_Vel,sigma=Var_Vel) ,col
  labs(x="Velocidad del viento", y="Densidad")
 ```
 
-Se aproxima un poco a la estimación de Kernel, pero se encuentran unas diferencias marcadas en la inforacion adicional que nos brinda con los picos que grafica Kernel donde se encuentra las mayores densidades de los intervalos de clase, en la gráfica negra se pueden observar 3 de estos picos. Por otro lado la grafica de densidad normal, las densidades se distribuyen de manera simétrica indicando que los datos no se encuentran tan dispersos dado que la curva no es aplanada sino por el contrario con un pico marcado o verosimilitud a una velocidad del viento estimada de 1.71 m/s que concuerda con el valor promedio de los datos de la velocidad del viento a las 12 de la tarde.
+Se aproxima, pero se encuentran unas diferencias marcadas en la información adicional que nos brinda con los picos que grafica Kernel, donde se encuentra las mayores densidades de los intervalos de clase, en la gráfica negra se pueden observar 3 de estos picos. Por otro lado, la gráfica de densidad normal muestra como las densidades se distribuyen de manera simétrica indicando que los datos no se encuentran tan dispersos dado que la curva no es aplanada, sino por el contrario, semejante a una distribución mesocúrtica, con un pico marcado o verosimilitud a una velocidad del viento estimada de 1.71 m/s que concuerda con el valor promedio de los datos de la velocidad del viento a las 12 de la tarde. 
 
 ## Referencias
 
