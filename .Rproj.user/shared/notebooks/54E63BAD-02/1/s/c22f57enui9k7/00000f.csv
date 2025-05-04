@@ -1,6 +1,0 @@
-"0","library(tidyverse)"
-"0",""
-"0","# Cargar el dataset ori.csv"
-"0","# ../  corresponde a la carpeta que contiene scripts/ (Nivel superior)”"
-"0","# se uso read_csv2 porque el archivo lo leyo separado por ;"
-"0","datos <- read_csv2(""../datasets/ori.csv"")"

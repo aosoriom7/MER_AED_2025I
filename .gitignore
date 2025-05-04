@@ -1,4 +1,14 @@
+# Ignorar archivos del sistema
+.DS_Store
+
+# Ignorar configuración de RStudio
 .Rproj.user
+
+# Ignorar historial de R
 .Rhistory
+
+# Ignorar archivos ocultos de renv
+renv/.DS_Store
+
 .RData
 .Ruserdata
