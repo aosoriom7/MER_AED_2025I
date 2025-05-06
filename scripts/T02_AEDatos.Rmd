@@ -40,10 +40,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r leer dataset, results='asis', message=FALSE, warning=FALSE}
 
+library(corrplot)
 library(devtools)
 library(dplyr)
 library(factoextra)
+library(FactoMineR)
 library(ggExtra)
+library(GGally)
 library(ggplot2)
 library(kableExtra)
 library(knitr)
@@ -52,9 +55,10 @@ library(plotly)
 library(psych)
 library(tidyverse)
 library(usethis)
+library(writexl)
 
 #carga de datos separados con sep=; 
-df_pais = read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_02.csv",sep=";",header = TRUE)
+df_pais <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_02.csv",sep=";",header = TRUE)
 
 # Visualiza la tabla de datos de mejor manera y con scroll
 # Para tablas pequeñas usar: kable(head(mi_dataframe), caption = "Primeras filas del dataset")
@@ -75,6 +79,56 @@ $w_1=5$
 
 Encuentre la estimación del vector de medias y la matriz de varianzas y covarianzas para 5 variables de su interés del conjunto de datos.
 
+### Vector de Medias
+```{r vector de medias}
+datos_taller_02 <- df_pais
+# Seleccionar las 5 variables de interés
+vars_interes <- datos_taller_02[, c(12, 16, 17, 40, 58)]
+# Estimación del vector de medias
+vector_medias <- colMeans(vars_interes)
+print(vector_medias)
+```
+Unidades en las que se miden las variables a estudiar:
+- TBPD (Thousand Barrels Per Day) 
+- BKWH (Billion Kilowatt-hours)
+
+Se observa que el promedio de consumo de gasolina es muy alto en comparación con otras variables, y que la generación eólica todavía es baja en promedio.
+
+### Matriz de varianzas y covarianzas
+```{r Matriz de varianzas y cov} 
+# Estimación de la matriz de varianzas y covarianzas
+matriz_covarianzas <- cov(vars_interes)
+print(matriz_covarianzas)
+```
+Las covarianzas (situadas fuera de la diagonal de la matriz) indican cómo dos variables interactuan. Los valores positivos indican relación directa o positiva, los valores negativos indican una relación indirecta o negativa, es decir, mientra una aumenta la otra disminuye. Y por último, si el valor es cero o cercano a cero, indica que las variables no tienen relación. 
+
+
+Podemos concluir que:
+
+- Motor_gasoline_consumption y production:
+Covarianza ≈ 834206.42 m
+Covarianza muy alta y positiva: los países que consumen más gasolina también tienden a producir más.
+
+- Kerosene y gasoline consumption:
+Covarianza ≈ 3652.59
+Covarianza: positiva pero pequeña → Existe relación entre las variables, pero no muy fuerte.
+
+- Wind electricity vs. cualquier otra:
+Covarianzas bajas (ej. con fósil ≈ 10183.49, con gasolina ≈ 18042.27), la generación eólica no tiene una fuerte relación lineal con las demás variables.
+
+
+
+A continuación, se muestra la diagonal de la matriz de varianzas y covarianzas, que representan la varianza de cada variable, es decir, qué tanto se dispersan los datos respecto a su media.
+```{r Varianzas} 
+# Varianza de cada una de las variables
+print (diag(matriz_covarianzas))
+```
+- La producción y consumo de gasolina tienen altísima varianza, lo que sugiere grandes diferencias entre países.
+
+- La generación eólica tiene baja varianza, lo que indica que la mayoría de los países tienen valores similares (probablemente bajos).
+
+- La generación eléctrica por fósiles también muestra alta varianza, lo cual refleja diferencias estructurales entre países en sus sistemas eléctricos.
+
 ## ACP
 ________________ 
 
@@ -83,9 +137,109 @@ $w_2=5$
 
 Realice un análisis descriptivo univariado y bivariado del conjunto de datos. Considere nuevamente las mismas 5 variables de su interés para este punto.
 
+### Análisis univariado 
+Resumen estadístico
 
+```{r summary} 
+summary(vars_interes)
+```
 
+Desviación estándar para cada variable
+```{r standard deviation} 
+sapply(vars_interes, sd, na.rm = TRUE)
+```
 
+#### Histograma de distribución para cada variable
+Histograma de distribución Kerosene_consumption_TBPD
+```{r}
+ggplot(vars_interes, aes(x = Kerosene_consumption_TBPD)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 50) +
+  labs(title = "Distribución de Kerosene_consumption_TBPD",
+       x = "Consumo (TBPD)",
+       y = "Frecuencia")
+```
+Histograma de distribución Motor_gasoline_consumption_TBPD
+```{r}
+ggplot(vars_interes, aes(x = Motor_gasoline_consumption_TBPD)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 50) +
+  labs(title = "Distribución de Motor_gasoline_consumption_TBPD",
+       x = "Consumo (TBPD)",
+       y = "Frecuencia")
+```
+
+Histograma de distribución Motor_gasoline_production_TBPD
+```{r}
+ggplot(vars_interes, aes(x = Motor_gasoline_production_TBPD)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 50) +
+  labs(title = "Distribución de Motor_gasoline_production_TBPD",
+       x = "Consumo (TBPD)",
+       y = "Frecuencia")
+```
+
+Histograma de distribución Fossil_fuels_electricity_net_generation_BKWH
+```{r}
+ggplot(vars_interes, aes(x = Fossil_fuels_electricity_net_generation_BKWH)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 50) +
+  labs(title = "Distribución de Fossil_fuels_electricity_net_generation_BKWH",
+       x = "Consumo (BKWH)",
+       y = "Frecuencia")
+```
+
+Histograma de distribución Fossil_fuels_electricity_net_generation_BKWH
+```{r}
+ggplot(vars_interes, aes(x = Wind_electricity_net_generation_BKWH)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 50) +
+  labs(title = "Distribución de Wind_electricity_net_generation_BKWH",
+       x = "Consumo (BKWH)",
+       y = "Frecuencia")
+```
+#### Boxplots
+Boxplot Kerosene_consumption_TBPD
+```{r}
+boxplot(vars_interes$Kerosene_consumption_TBPD)
+```
+
+Boxplot Motor_gasoline_consumption_TBPD
+```{r}
+boxplot(vars_interes$Motor_gasoline_consumption_TBPD)
+```
+
+Boxplot Motor_gasoline_production_TBPD
+```{r}
+boxplot(vars_interes$Motor_gasoline_production_TBPD)
+```
+
+Boxplot Fossil_fuels_electricity_net_generation_BKWH
+```{r}
+boxplot(vars_interes$Fossil_fuels_electricity_net_generation_BKWH)
+```
+
+Boxplot Wind_electricity_net_generation_BKWH
+```{r}
+boxplot(vars_interes$Wind_electricity_net_generation_BKWH)
+```
+
+### Análisis multivariado 
+
+La matriz de correlación indica la fuerza y dirección de las relaciones lineales entre las variables de un conjunto de datos.
+```{r}
+correlaciones <- cor(vars_interes, use = "complete.obs")
+print(correlaciones)
+```
+- Alta correlación entre Motor_gasoline_consumption_TBPD y Motor_gasoline_production_TBPD: 0.9945. Esto indica una relación casi perfecta. Los países que más gasolina producen también la consumen mucho.
+
+- Alta correlación entre entre Fossil_fuels_electricity_net_generation_BKWH y Wind_electricity_net_generation_BKWH: 0.9070. Los países que generan más electricidad con fósiles también tienen alta generación eólica.
+
+- Correlación fuerte entre Motor_gasoline_production_TBPD y Wind_electricity_net_generation_BKWH: 0.8571. Los paises con alta producción de gasolina, también tienen una alta generación neta de electricidad eólica.
+
+- Kerosene_consumption_TBPD tiene correlaciones débiles con todas las demás (< 0.29).
+
+```{r}
+ggpairs(vars_interes)
+```
+La mayoría de las variables tienen distribuciones sesgadas hacia valores bajos con algunos valores muy altos (ver diagramas de dispersión).
+
+Esto sugiere que la mayoría de los países tienen baja producción o consumo, mientras que unos pocos tienen valores extremos.
 
 ### Pregunta 3 Ivan
 $w_3=8$  
@@ -141,8 +295,6 @@ Para los datos sin normalizar, las contribuciones son mayores comparadas con las
 $w_4=8$  
 Una vez calculado el PCA normado, ¿qué número de componentes principales deberíamos seleccionar? ¿Bajo que criterio seleccionó este número de componentes?
 
-
-
 ### Pregunta 5 Diego
 $w_5=8$  
 Analice la representación de las variables originales sobre las dos primeras componentes en el primer plano factorial. ¿Que conclusiones podemos sacar de este análisis?
@@ -175,6 +327,55 @@ $w_6=10$
 Ahora examine con detenimiento el mapa de individuos sobre los planos factoriales que conforman las componentes (1,2) y (2,3). ¿Qué conclusiones puede sacar según la cercanía de algunas UE?
 
 
+
+```{r}
+res.pca <- PCA(datos[,-1], graph = FALSE)
+fviz_pca_ind(res.pca, geom.ind = "point", 
+             col.ind = "#FC4E07", 
+             axes = c(1, 2), 
+             pointsize = 1.5) 
+```
+Dim1 (62%):
+
+- Este eje captura la mayor parte de la variabilidad, sugiriendo que una única dimensión ordena eficientemente a los países.
+
+- Rango de valores: Los países se distribuyen desde -10 (extremo izquierdo) hasta 40 (extremo derecho), indicando una fuerte polarización.
+
+Dim2 (7.7%):
+
+- Su contribución parece marginal, por lo que el análisis se centra en Dim1 (62%).
+
+Distribución de Países
+
+Patrón de dispersión:
+
+- Extremo derecho: Países con características inusuales.
+
+- Centro (valores cercanos a 0): Países con perfiles energéticos similares.
+
+- Extremo izquierdo (valores negativos): Países con patrones atípicos.
+
+
+
+```{r}
+fviz_pca_ind(res.pca, geom.ind = "point", 
+             col.ind = "blue", 
+             axes = c(2, 3), 
+             pointsize = 1.5) 
+```
+Dim3 (7%) y Dim2 (7.7%):
+
+Ambos componentes explican una proporción baja de varianza total (14.7% combinada). Esto sugiere que:
+
+- La estructura subyacente de los datos es alta-dimensional (muchas variables influyentes no capturadas en estos ejes).
+
+Distribución de Países
+
+- Los puntos (países) están dispersos en un rango de -10 a 10 en ambos ejes, sin agrupamientos claros. Esto indica:
+
+- No hay perfiles dominantes que agrupen a múltiples países.
+
+- Outliers potenciales: Países en extremos (ej., cerca de (-10, 10)) podrían ser casos atípicos.
 
 
 ### Pregunta 7 Ivan
@@ -247,6 +448,7 @@ $w_{10}=12$
 Determine mediante k-means y aglomeración jerárquica (usando enlace promedio) la clasificación en grupos para los países de estudio. Considere todas las variables de estudio ¿son diferentes los resultados de los dos análisis cluster?
 
 ```{r preg_10a, message=FALSE, warning=FALSE}
+set.seed(100)
 kmeans_m <- kmeans(pca_normalizado$x, centers = 4)# aplicar K-means con 4 clusters
 clusters <- kmeans_m$cluster 
 
