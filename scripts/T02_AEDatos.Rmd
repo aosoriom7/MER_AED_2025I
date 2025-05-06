@@ -155,7 +155,7 @@ datos_rec <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller
 datos_solo_numericos <- datos_rec[, -1]
 acp_c <-prcomp(datos_solo_numericos, scale = TRUE)
 
-fviz_pca_var(acp_c,axes=c(1,2),repel=TRUE)
+fviz_pca_var(acp_c,axes=c(1,2),repel=TRUE, labelsize=3, arrowsize=0.5, arrowwidth=0.5)
 ```
 
 En el siguiente diagrama fasorial se grafican los 2 componentes principales, la misma es un poco difusa porque se están graficando las 57 variables.
@@ -273,7 +273,7 @@ Grafique mediante boxplot la distribución de las 5 variables seleccionadas en e
 
 ```{r preg_11a, message=FALSE, warning=FALSE}
 Variables_Escogidas = paises_filtrados[, c("Country" ,"Refined_petroleum_products_consumption_TBPD", "Refined_petroleum_products_production_TBPD", "Electricity_exports_BKWH", "Electricity_imports_BKWH", "Electricity_installed_capacity_MK")]
-Variables_Escogidas$Grupo <- Cluster_4 # agregar al set de datos una columna con el grupo
+Variables_Escogidas$Grupo <- clusters # agregar al set de datos una columna con el grupo
 
 # boxplot de Refined_petroleum_products_consumption_TBPD
 ggplot(Variables_Escogidas, aes(x = factor(Grupo), y = Refined_petroleum_products_consumption_TBPD)) +
