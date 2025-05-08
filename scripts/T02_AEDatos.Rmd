@@ -62,8 +62,8 @@ df_pais <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_0
 
 # Visualiza la tabla de datos de mejor manera y con scroll
 # Para tablas pequeñas usar: kable(head(mi_dataframe), caption = "Primeras filas del dataset")
-kable(head(df_pais), caption = "Primeras filas del dataset") %>%
-  scroll_box(width = "100%", height = "auto")
+#kable(head(df_pais), caption = "Primeras filas del dataset") %>%
+#  scroll_box(width = "100%", height = "auto")
 #summary(df_pais)
 ```
 
@@ -106,15 +106,15 @@ Las covarianzas (situadas fuera de la diagonal de la matriz) indican cómo dos v
 Podemos concluir que:
 
 - Motor_gasoline_consumption y production:
-Covarianza ≈ 834206.42 m
+Covarianza "$\\approx$" 834206.42 m
 Covarianza muy alta y positiva: los países que consumen más gasolina también tienden a producir más.
 
 - Kerosene y gasoline consumption:
-Covarianza ≈ 3652.59
+Covarianza "$\\approx$" 3652.59
 Covarianza: positiva pero pequeña → Existe relación entre las variables, pero no muy fuerte.
 
 - Wind electricity vs. cualquier otra:
-Covarianzas bajas (ej. con fósil ≈ 10183.49, con gasolina ≈ 18042.27), la generación eólica no tiene una fuerte relación lineal con las demás variables.
+Covarianzas bajas (ej. con fósil "$\\approx$" 10183.49, con gasolina "$\\approx$" 18042.27), la generación eólica no tiene una fuerte relación lineal con las demás variables.
 
 
 
