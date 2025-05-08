@@ -3,12 +3,12 @@ title: "Analisis Estadistico de Datos"
 author: "Grupo 05"
 date: "2025-05-04"
 output:
+  pdf_document:
+    toc: true
   html_document:
     toc: true
     toc_float: true
     theme: cosmo
-  pdf_document:
-    toc: true
 output_dir: "/Users/aosoriom/Repos/MER_AEDatos/docs" 
 ---
 
@@ -64,7 +64,7 @@ df_pais <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_0
 # Para tablas pequeñas usar: kable(head(mi_dataframe), caption = "Primeras filas del dataset")
 kable(head(df_pais), caption = "Primeras filas del dataset") %>%
   scroll_box(width = "100%", height = "auto")
-summary(df_pais)
+#summary(df_pais)
 ```
 
 ```{r tabla-scroll-kableExtra, echo=FALSE, message=FALSE, warning=FALSE}
@@ -74,7 +74,7 @@ summary(df_pais)
 ## Normal Multivariada
 ________________  
 
-### Pregunta 1 Daniel
+### Pregunta 1 
 $w_1=5$  
 
 Encuentre la estimación del vector de medias y la matriz de varianzas y covarianzas para 5 variables de su interés del conjunto de datos.
@@ -132,7 +132,7 @@ print (diag(matriz_covarianzas))
 ## ACP
 ________________ 
 
-### Pregunta 2 Daniel 
+### Pregunta 2  
 $w_2=5$  
 
 Realice un análisis descriptivo univariado y bivariado del conjunto de datos. Considere nuevamente las mismas 5 variables de su interés para este punto.
@@ -241,7 +241,7 @@ La mayoría de las variables tienen distribuciones sesgadas hacia valores bajos 
 
 Esto sugiere que la mayoría de los países tienen baja producción o consumo, mientras que unos pocos tienen valores extremos.
 
-### Pregunta 3 Ivan
+### Pregunta 3 
 $w_3=8$  
 El conjunto de datos incluye 57 variables, analizarlas de forma individual podría representar un gasto computacional y de tiempo bastante agotador; por lo cuál una técnica de reducción de dimensionalidad sería ideal. Ejecute un ACP sobre estos datos, compare la contribución de las variables sobre el primer plano factorial de un ACP normado (escalado) y uno sin normalizar (sin escalar).
 
@@ -284,20 +284,29 @@ contribucion_sin_normalizar <- pca_sin_normalizar$sdev^2
 contribuciones_df <- data.frame(
   Contribucion_Normalizado = contribucion_normalizado,
   Contribucion_Sin_Normalizar = contribucion_sin_normalizar)
-
+#print(format(contribuciones_df, scientific=FALSE))
+head(contribuciones_df, n=10)
 ```
 
 Con las variables seleccionadas que presentan valores bajos con respecto a otros países se observa que las contribuciones tienen poca influencia en la variación de los datos después de ser normalizados, por lo que se puede decir que dichas variables no contribuyen con aportes significativos al primer componente principal con datos escalados. 
-  
 Para los datos sin normalizar, las contribuciones son mayores comparadas con las normalizadas debido a los rangos o escalas de las variables seleccionadas no normalizadas.
 
-### Pregunta 4 Andres
+### Pregunta 4 
 $w_4=8$  
 Una vez calculado el PCA normado, ¿qué número de componentes principales deberíamos seleccionar? ¿Bajo que criterio seleccionó este número de componentes?
 
-### Pregunta 5 Diego
+Se toma como referencia dos criterios 1) el Criterio de Kaiser que define que se deben conservar o seleccionar aquellos cuyos valores propios son iguales o superiores a 1 y 2) Porcentaje de la varianza acumulada, en el cual se calcula el porcentaje de la varianza de cada componente y se realiza el calculo del acumulado con el aporte de cada componente hasta que se evidencia un valor significativo de este porcentaje acumulado. 
+
+1) Criterio Kaiser: se selecciona hasta el componente principal 8, el cual es $PC_1=1.11$ y cumple son ser mayor que 1. En otras palabras, se seleccionana del componente 1 al 8 por ser mayores a 1.
+
+2) Criterio de % de Varianza acumulada:usualmente se toman los componentes principales que totalicen una varianza acumulada entre 70% y 90%. Para este ejercicio se usara el principio de Pareto identificando los componentes que alcancen una varianza acumulada igual o superior al 80%, los cuales serian de los componentes del 1 al 4; estos 4 componentes equivalen al 7% del total y representan el 81.8% de la varianza acumulada. 
+
+
+### Pregunta 5 
 $w_5=8$  
 Analice la representación de las variables originales sobre las dos primeras componentes en el primer plano factorial. ¿Que conclusiones podemos sacar de este análisis?
+
+En el siguiente diagrama fasorial se grafican los 2 componentes principales, la misma es un poco difusa porque se están graficando las 57 variables.
 
 ```{r preg_05a, message=FALSE, warning=FALSE}
 #agrupa los datos por componentes principales escalados y los guarda en la variable asignada acp_c (para reducir el tamaño del nombre de las variables se utiliza IA)
@@ -310,19 +319,17 @@ acp_c <-prcomp(datos_solo_numericos, scale = TRUE)
 fviz_pca_var(acp_c,axes=c(1,2),repel=TRUE, labelsize=3, arrowsize=0.5, arrowwidth=0.5)
 ```
 
-En el siguiente diagrama fasorial se grafican los 2 componentes principales, la misma es un poco difusa porque se están graficando las 57 variables.
-
 Por esto se procede a graficar únicamente las 30 variables que más aportan a los datos como se aconseja en la sección de ayuda, mediante  `fviz_pca_var(acp_c,axes=c(1,2),repel=TRUE,select.var = list(contrib = 30))` obteniendo la siguiente grafica, de esta podemos concluir que dimension 1 o PCA 1, agrupa el 62% de los datos y el PCA 2 el 7,7%, siendo necesario apoyarnos en mas PCAs para lograr tomar un 80% de los datos y tener una mejor representacion de los datos de las 57 variables. Por otro lado, las flechas asignadas para cada variable indican la contribución en cada PCA, dando como resultado que en su mayoria aportan a la dimension 1 con una longitud muy parecida o agrupada entre cada variable dado que eliminamos las que menos contribuían, teniendo 2 casos visiblemente diferentes como lo son las variables Hid_Bom_Gen ( Hydroelectric_pumped_storage_electricity_net_generation_BKWH), la cual se ubica en el cuadrante 2 aportanto al PCA1 negativo, y la variable NG_Lq_Pro (Natural_gas_plant_liquids_production_TBPD), la cual aporta en la dimension 1 y 2.
-
-### GRAF05_1
 
 En contraste al ejercicio de clase, en este contamos con una cantidad mayor de componentes relevantes para el análisis, por lo cual, realice el mismo gráfico anterior pero ahora sobre el plano factorial conformado por los componentes 2 y 3. ¿Qué conclusiones podemos sacar de este gráfico?
 
 Utilizando la linea de codigo `fviz_pca_var(acp_c, axes = c(2, 3),repel=TRUE,select.var = list(contrib = 30))`, Los datos de las variables en estos componentes tienen una menor contribución y estos se puede evidenciar en la magnitud de las flechas, junto a esto, se puede ver que hay una mayor distribución en los diferentes cuadrantes del diagrama fasorial, es importante resaltar como el PCA3 tiene 7% de los datos, con estos 3 PCAs agruparíamos el 76.7% de los datos, sería necesario tomar más componentes principales para llegar al 80%, lo cual nos daría una representación objetiva de los datos.
 
-### GRAF05_2
+```{r preg_05c, message=FALSE, warning=FALSE}
+fviz_pca_var(acp_c, axes = c(2, 3),repel=TRUE,select.var = list(contrib = 30))
+```
 
-### Pregunta 6 Daniel
+### Pregunta 6 
 $w_6=10$  
 Ahora examine con detenimiento el mapa de individuos sobre los planos factoriales que conforman las componentes (1,2) y (2,3). ¿Qué conclusiones puede sacar según la cercanía de algunas UE?
 
@@ -378,7 +385,7 @@ Distribución de Países
 - Outliers potenciales: Países en extremos (ej., cerca de (-10, 10)) podrían ser casos atípicos.
 
 
-### Pregunta 7 Ivan
+### Pregunta 7
 $w_7=10$  
 Como hemos observado en clase, el ACP es una técnica bastante sensible a datos atípicos, ejecute nuevamente el ACP retirando del conjunto de datos a Estados Unidos, China, Arabia Saudi y Rusia. ¿En que cambia el ACP al excluir estos países?. ¿Se perciben clusters de países con mayor claridad?. Calcule únicamente el ACP normado.
 
@@ -405,7 +412,7 @@ varianza_explicada <- pca_normalizado$sdev^2
  
 varianza_acumulada <- cumsum(varianza_explicada) / sum(varianza_explicada)
  
-head(contribuciones_df)
+head(contribuciones_df, n=10)
 ```
 
 Los países retirados presentan datos atípicos ya que son grandes consumidores de recursos energéticos como la electricidad o el petróleo y por otra parte, también se tienen grandes productores de aquellos recursos.
@@ -420,7 +427,7 @@ Al ser retirados estos países con datos atípicos, contribuye a buscar más efi
 ________________ 
 Los puntos 8 a 11 se realizarán excluyendo de la base de datos los países atípicos mencionados en el punto 7 (es decir, retirando ‘UnitedStates’,‘China’,‘SaudiArabia’,‘Russia’).
 
-### Pregunta 8 Zahira
+### Pregunta 8 
 $w_8=8$  
 De acuerdo a lo aprendido en la clase de agrupamiento, utilice el primer plano factorial para determinar de manera aproximada el número de grupos en el análisis. ¿Cuántos clusters espera que existan en el conjunto de datos?
 
@@ -438,12 +445,24 @@ for (i in 1:10)
 
 De acuerdo con la imagen anterior, se pueden esperar 4 clústeres o grupos ya que con esta cantidad se obtiene una reducción de distancia significativa y con cantidades mayores las reducciones son pequeñas.
 
-### Pregunta 9 Andres
+### Pregunta 9 
 $w_9=12$  
 Mediante el método de reducción de varianza explicada, determine un número fijo de clusters para su análisis. No tiene que ser el mismo número que el elegido por su compañero, recuerde que ninguno conoce las etiquetas reales de los grupos de los países.
 
+Respecto de la curva de codo de obtenida en el punto anterior, se considera que un numero ideal de clusters para analisis es k=4, dado que, luego de este, la disminucion se reduce significativamente la mejor en valores superiores de k no es representativa 
 
-### Pregunta 10 Diego
+```{r preg_09, message=FALSE, warning=FALSE}
+#PrimerasComponentes <- pca_normalizado$x[, c(1, 2)] #Seleccion de la ubicación de cada país en las dos componentes principales
+distancia_total <- numeric(4)  # Crear vector de longitud 10
+for (i in 1:4) 
+  {
+    kmeans_model <- kmeans(PrimerasComponentes, centers = i) #agrupar los datos ubicados en el plano en i cantidad de grupos
+    distancia_total[i] <- kmeans_model$tot.withinss #sumar la distancia total de la agrupación i
+  } 
+  plot(1:4,distancia_total,ylab="Distancia por número de grupos", xlab = '1:4', type='b')
+```
+
+### Pregunta 10
 $w_{10}=12$  
 Determine mediante k-means y aglomeración jerárquica (usando enlace promedio) la clasificación en grupos para los países de estudio. Considere todas las variables de estudio ¿son diferentes los resultados de los dos análisis cluster?
 
@@ -469,7 +488,7 @@ table(clusters_aglomerados)
 
 Si, Son diferentes los resultados entre k-means y aglomeración jerárquica promedio, podemos observar en los resultados que en el caso de K-means el cluster 3 contiene 87 paises, y en el caso de agrupamiento promedio, el grupo 3 contiene 2 paises. El agrupamiento jerarquico promedio agrupa 101 países en el grupo 1, como se vio en clase, los diferentes métodos de agrupamiento (clusters) difieren al momento de tomar las distancias entre los diferentes valores para irlos agrupando, lo cual queda demostrado en la comparación de los resultados anteriores.
 
-### Pregunta 11 Zahira
+### Pregunta 11
 $w_{11}=12$  
 Grafique mediante boxplot la distribución de las 5 variables seleccionadas en el punto 2 diferenciando por los grupos encontrados mediante k-means (es decir, obtenga un boxplot por variable y por grupo: si por ejemplo k-means indica un total de 3 grupos, realice 3 boxplots, uno por grupo, para cada una de las 5 variables). ¿Observa diferencias importantes entre las distribuciones por grupos de la misma variable?
 
