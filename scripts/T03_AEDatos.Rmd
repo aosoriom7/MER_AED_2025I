@@ -1,0 +1,303 @@
+---
+title: "Analisis Estadistico de Datos"
+author: "Grupo 05"
+date: "2025-05-18"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+  pdf_document:
+    toc: true
+output_dir: "/Users/aosoriom/Repos/MER_AEDatos/docs" 
+---
+
+<!-- Para dejar limitadores visuales (lineas divisorias) usar ________________  -->
+<!-- Para dejar un salto de linea se deja un doble espacio al final  -->
+<!-- con toc_float: true la table of contents queda a la izquierda   -->
+<!-- con rmarkdown::render("scripts/02.Rmd", output_dir = "docs") se logro poner el html en /docs 1 vez   -->
+
+________________  
+
+# Taller 03
+**Regresion Lineal Multiple y ANOVA**   
+**Maestría en Energías Renovables**  
+**Escuela de Ingeniería, Ciencia y Tecnología**  
+**Universidad del Rosario**  
+**Integrantes:**  
+Zahira Itzel González Cleves  
+Diego Alejandro Mejía Montañez  
+Daniel Felipe Russi Aragón  
+Iván Camilo Granados Niño  
+Andrés Alfonso Osorio Marulanda
+
+________________  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r leer dataset, results='asis', message=FALSE, warning=FALSE}
+
+library(broom)
+library(corrplot)
+library(devtools)
+library(dplyr)
+library(factoextra)
+library(FactoMineR)
+library(forcats)
+library(ggExtra)
+library(GGally)
+library(ggplot2)
+library(kableExtra)
+library(knitr)
+library(lubridate)
+library(MASS)
+library(plotly)
+library(psych)
+library(purrr)
+library(readr)
+library(stringr)
+library(tibble)
+library(tidyr)
+library(tidyverse)
+library(usethis)
+library(writexl)
+
+#carga de datos separados con sep=; 
+df_EIA <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_03.csv",sep=";",header = TRUE)
+df_Turbinas <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/turbinas_prod.csv",sep=";",header = TRUE)
+
+datos = df_EIA %>% as_tibble() %>% # operador pipe (tuberia) encadena operaciones (~ y luego...)
+             dplyr::filter(!Country %in% c('UnitedStates','China','SaudiArabia','Russia')) %>% 
+             dplyr::select(c("GDP_USD","Population","Solar_electricity_net_generation_BKWH","Wind_electricity_net_generation_BKWH")) %>% 
+             dplyr::filter(Solar_electricity_net_generation_BKWH >0 & Wind_electricity_net_generation_BKWH>0) %>% 
+             dplyr::mutate(GDP_USD_PER_CAPITA = GDP_USD/Population) %>% 
+             dplyr::select(-c('GDP_USD','Population')) 
+
+datosRed = df_EIA %>% as_tibble() %>% # operador pipe (tuberia) encadena operaciones (~ y luego...)
+             dplyr::filter(!Country %in% c('UnitedStates','China','SaudiArabia','Russia')) %>% 
+             dplyr::select(c("GDP_USD","Population","Solar_electricity_net_generation_BKWH","Wind_electricity_net_generation_BKWH")) %>% 
+             dplyr::filter(Solar_electricity_net_generation_BKWH >0 & 
+                             Solar_electricity_net_generation_BKWH <=5 &
+                             Wind_electricity_net_generation_BKWH >0 & 
+                             Wind_electricity_net_generation_BKWH <=10) %>% 
+             dplyr::mutate(GDP_USD_PER_CAPITA = GDP_USD/Population) %>% 
+             dplyr::select(-c('GDP_USD','Population')) 
+```
+
+resumen de datos:
+```{r previsualizacion, message=FALSE, warning=FALSE}
+
+view(datos)
+
+```
+
+
+## Modelos de Regresion Lineal
+________________  
+
+### Pregunta 1 (Andres)
+$w_1=10$  
+
+Mediante la función `GGally::ggpairs`, grafique los diagramas de dispersión bivariados para el conjunto de datos. ¿Qué tipo de relación observa entre cada par de variables? ¿Visualmente considera que las variables Solar_electricity_net_generation_BKWH y Wind_electricity_net_generation_BKWH presentan varianza constante, (también llamada homoscedasticidad) a través de los valores de la variable GDP_USD_PER_CAPITA?
+
+```{r preg_01, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+ggpairs(datos,
+        title = "Energías Renovables vs PIB Percapita",
+        lower = list(continuous = wrap("points", alpha = 0.4, size = 1.5, color = "steelblue")), # Puntos con transparencia
+        upper = list(continuous = wrap("cor", size = 4, method = "pearson")), # Coeficientes de correlación de Pearson
+        diag = list(continuous = wrap("densityDiag", alpha = 0.6, fill = "lightblue"))) # Densidad de la distribución
+```
+
+
+```{r preg_01Red, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+ggpairs(datosRed,
+        title = "Energías Renovables vs PIB Percapita (Red. Solar a 5TWh y Eolica a 10TWh)",
+        lower = list(continuous = wrap("points", alpha = 0.4, size = 1.5, color = "steelblue")), # Puntos con transparencia
+        upper = list(continuous = wrap("cor", size = 4, method = "pearson")), # Coeficientes de correlación de Pearson
+        diag = list(continuous = wrap("densityDiag", alpha = 0.6, fill = "lightblue"))) # Densidad de la distribución
+```
+
+```{r preg_01b, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+modelo_solar <- lm(Solar_electricity_net_generation_BKWH ~ GDP_USD_PER_CAPITA, data = datos)
+#summary(modelo_solar)
+
+ggplot(datos, aes(x = Solar_electricity_net_generation_BKWH, y = GDP_USD_PER_CAPITA)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Regresión lineal: Solar vs. PIB per cápita",
+       y = "PIB per cápita (USD)",
+       x = "Generación solar neta (TWh)")
+```
+
+```{r preg_01c, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+modelo_solar2 <- lm(Solar_electricity_net_generation_BKWH ~ GDP_USD_PER_CAPITA, data = datosRed)
+#summary(modelo_solar)
+
+ggplot(datosRed, aes(x = Solar_electricity_net_generation_BKWH, y = GDP_USD_PER_CAPITA)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Regresión lineal: Solar vs. PIB per cápita (Red Solar a 5TWh)",
+       y = "PIB per cápita (USD)",
+       x = "Generación solar neta (TWh)")
+```
+
+```{r preg_01d, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+modelo_eolico <- lm(Wind_electricity_net_generation_BKWH ~ GDP_USD_PER_CAPITA, data = datos)
+#summary(modelo_eolico)
+
+ggplot(datos, aes(x = Wind_electricity_net_generation_BKWH, y = GDP_USD_PER_CAPITA)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Regresión lineal: Eolica vs. PIB per cápita",
+       y = "PIB per cápita (USD)",
+       x = "Generación Eolica neta (TWh)")
+```
+
+```{r preg_01e, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+modelo_eolico2 <- lm(Wind_electricity_net_generation_BKWH ~ GDP_USD_PER_CAPITA, data = datosRed)
+#summary(modelo_eolico)
+
+ggplot(datosRed, aes(x = Wind_electricity_net_generation_BKWH, y = GDP_USD_PER_CAPITA)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Regresión lineal: Eolica vs. PIB per cápita (Eolica Reducida a 10TWh)",
+       y = "PIB per cápita (USD)",
+       x = "Generación Eolica neta (TWh)")
+```
+
+Se observa que la mayor parte de la generación solar y eólica neta se concentra en los valores menores de la gráfica, entre 0 y 5 B_kWh para solar y entre 0 y 10 B_kWh para eólica. Tomando como referencia un factor de planta del 20% y una generación neta menor a 10 B_kWh representaría capacidades instaladas de aprox. 5.7GW, lo cual represente la capacidad instalada de poco más del 70% de los paises   
+
+Por otro lado, aquellos paises con un mayor PIB percapita (> $USD\$$ 25,000) muestran rango mas amplio de generacion con fuentes renovables; de hecho las mayores generaciones se encuentran en dichos paises, asociado a que dichas economias incentivan más el uso e inversión en energias renovables.
+
+Ahora, respecto de la regresión lineal calculada, se puede observar como los valores atípicos (outliers) de las generaciones con fuentes renovables más altas aplanan esta regresión y hacen que la correlación sea menor; estas corresponden a países con altos PIB percapita. Al exluir los valores por encima de los 10B_kWh (TWh) para fuentes solares y superiores a los 20 B_kWh (TWh) de fuentes eólicas, los coeficientes de correlación aumentarían significativamente; pasando de 0.177 a 0.335 en generacion solar y 0.165 a 0.348 en eolica, tal como lo haría la pendiente de la regresión lineal.
+
+Finalmente, al retirar los valores atípicos, los modelos de regresion líneal reducen el valor del intercepto de la energia generada en el eje Y (PIB percapita), en otras palabras, acercan las el valor al punto de mayor concetracion de datos. 
+
+### Pregunta 2 (Andres)
+$w_2=10$  
+
+Para explicar el PIB per capita (GDP_USD_PER_CAPITA) a través de las variables en la tabla `datos` de manera simultánea, ajuste un modelo de regresión con todas las variables explicativas e interprete la salida del mismo con la ayuda de la función `summary()`. ¿Cómo interpretaría los coeficientes estimados del modelo? ¿Cuál variable parece ser más importante para explicar el GDP_USD_PER_CAPITA?
+
+*Ayuda:*
+
+* Recuerde utilizar el símbolo $∼$ para establecer el modelo de regresión.
+* Cuando quiera utilizar una regresión con todas las variables en el conjunto de datos, no hace falta escribir una a una, puede hacer referencia a todas mediante un punto “.”.
+
+Se presenta a continuación el resumen de los modelo solar, eolico y los reducidos:
+
+```{r preg_02a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+tidy(modelo_solar) %>%
+  kable(digits = 3, caption = "Resumen del modelo de regresión Solar") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r preg_02b, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+tidy(modelo_solar2) %>%
+  kable(digits = 3, caption = "Resumen del modelo de regresión solar (Reducido [0,5] TWh)") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r preg_02c, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+tidy(modelo_eolico) %>%
+  kable(digits = 3, caption = "Resumen del modelo de regresión eolico") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r preg_02d, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+tidy(modelo_eolico2) %>%
+  kable(digits = 3, caption = "Resumen del modelo de regresión eolico (Reducido [0,10] TWh)") %>%
+  kable_styling(full_width = FALSE)
+```
+
+
+### Pregunta 3 (Diego)
+$w_3=15$  
+
+Según la salida de `summary()` anterior, ¿cuál es el valor del estadístico 𝐹 del modelo?. Dado su valor y el valor 𝑝
+ asociado del modelo, ¿son estas variables en conjunto relevantes desde el punto de vista estadístico para explicar el PIB?.
+
+*Ayuda:*
+
+En la función `summary()` no se obtienen los asteriscos mencionados en clase. Sin embargo, este presenta una fila de códigos de significancia: `signif. codes: pvalue < 0 - ‘***’ pvalue < 0.001 ‘**’ pvalue < 0.01 ‘*’ pvalue < 0.05 ‘.’ pvalue < 0.1 ‘ ’`
+
+
+
+### Pregunta 4 (Daniel)
+$w_4=15$  
+
+A través de los gráficos asociados al modelo obtenidos con la función `plot()`, mencione respecto a los supuestos de:
+
+Normalidad de los errores del modelo.
+Varianza constante.
+¿Parece el modelo seguir los dos supuestos mencionados?
+
+
+
+### Pregunta 5 (Zahira)
+$w_5=20$  
+
+Estime ahora un modelo de regresión lineal múltiple, pero esta vez realice una transformación de logaritmo sobre la variable de respuesta `log(GDP_USD_PER_CAPITA)`. ¿Qué pasa ahora con el modelo cuando realizamos esta transformación? ¿Cuál modelo presenta residuales más cercanos a la distribución normal?
+
+## ANOVA
+________________  
+
+En el conjunto de datos `turbinas_prod.csv` cuenta con la producción mensual promedio de 5 turbinas eólicas ubicadas en la Guajira. Esta información se tiene por un total de 12 meses para cada turbina y la medición esta dada en MWh. Se busca determinar si existen diferencias significativas entre la producción promedio de energía de las turbinas.
+
+### Pregunta 6 (Ivan)
+$w_6=5$
+
+Realice el boxplot de producción para las diferentes turbinas y determine visualmente si observa diferencias en la producción de energía de las 5 turbinas. ¿Parece haber varianza constante en las observaciones de las turbinas?
+
+*Ayuda:*
+
+Puede resultarle conveniente usar la función `pivot_longer`, con la cual, puede cambiar el formato ancho al largo de la base de datos, Basta con: `pivot_longer(datos,cols=columnas_de_base,names_to='Nombre_nueva_col1',values_to='Nombre_nueva_col2')`
+
+
+
+### Pregunta 7 (Diego)
+$w_7=5$
+
+Ajuste un modelo de regresión lineal simple para explicar la producción usando la variable de turbina ¿A qué es igual el R2 del modelo ajustado? ¿Cómo interpreta los parámetros estimados del modelo? ¿Cuál es la categoría de referencia pra el modelo ajustado?
+
+
+### Pregunta 8 (Ivan)
+$w_8=5$
+
+Mediante los parámetros del modelo ajustado, ¿cuál es la producción promedio de la turbina 4? verifique el resultado calculando el promedio simple para las observaciones de la turbina en cuestión.
+
+### Pregunta 9 (Daniel)
+$w_9=5$
+
+Determine mediante una prueba estadística apropiada si existen diferencias significativas entre la producción promedio de energía de las turbinas. ¿A qué es igual el valor del estadístico $𝐹$ $F$ en la prueba de hipótesis correspondiente?
+
+
+
+### Pregunta 10 (Ivan)
+$w_10=10$  
+
+Encuentre los residuales del modelo ajustado y con estos realice una estimación kernel de la densidad (como lo vimos en la primera sesión de clase) junto a un histograma. ¿Encuentra una distribución conocida para los residuales del modelo?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Referencias
+
+1. [Introduction to R markdown](https://rmarkdown.rstudio.com/articles_intro.html) 
+1. MarkDown Guide - [Basic Syntax](https://www.markdownguide.org/basic-syntax/)
+1. [Data Visualization CheatSheet](https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf)
+1. [Repositorio](https://github.com/aosoriom7/MER_AED_2025I) del Taller en Github
+1. [Pagina](https://aosoriom7.github.io/MER_AED_2025I/scripts/02.html) web del taller en Gihub Pages
+1. [Solar Power by Country](https://en.wikipedia.org/wiki/Solar_power_by_country)
+
