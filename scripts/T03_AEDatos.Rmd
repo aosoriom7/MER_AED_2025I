@@ -67,6 +67,7 @@ library(writexl)
 df_EIA <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_03.csv",sep=";",header = TRUE)
 df_Turbinas <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/turbinas_prod.csv",sep=",",header = TRUE)
 
+# Extrae datos de 4 paises y con generacion solar y eolica igual a 0
 datos = df_EIA %>% as_tibble() %>% # operador pipe (tuberia) encadena operaciones (~ y luego...)
              dplyr::filter(!Country %in% c('UnitedStates','China','SaudiArabia','Russia')) %>% 
              dplyr::select(c("GDP_USD","Population","Solar_electricity_net_generation_BKWH","Wind_electricity_net_generation_BKWH")) %>% 
@@ -74,6 +75,8 @@ datos = df_EIA %>% as_tibble() %>% # operador pipe (tuberia) encadena operacione
              dplyr::mutate(GDP_USD_PER_CAPITA = GDP_USD/Population) %>% 
              dplyr::select(-c('GDP_USD','Population')) 
 
+# Extrae datos de 4 paises y con generacion solar y eolica por fuera del rango (0,5] 
+# para solar y (0,10] para eolica).
 datosRed = df_EIA %>% as_tibble() %>% # operador pipe (tuberia) encadena operaciones (~ y luego...)
              dplyr::filter(!Country %in% c('UnitedStates','China','SaudiArabia','Russia')) %>% 
              dplyr::select(c("GDP_USD","Population","Solar_electricity_net_generation_BKWH","Wind_electricity_net_generation_BKWH")) %>% 
@@ -190,6 +193,7 @@ Para explicar el PIB per capita (GDP_USD_PER_CAPITA) a través de las variables 
 Se presenta a continuación el resumen de los modelo solar, eolico y los reducidos:
 
 ```{r preg_02a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+summary(modelo_solar)
 tidy(modelo_solar) %>%
   kable(digits = 3, caption = "Resumen del modelo de regresión Solar") %>%
   kable_styling(full_width = FALSE)
@@ -335,7 +339,7 @@ Ajuste un modelo de regresión lineal simple para explicar la producción usando
 modelo_turbinas <- lm(Produccion ~ Turbina, data = datos_largos) 
 summary(modelo_turbinas) 
 tidy(modelo_turbinas) %>%
-  kable(digits = 3, caption = "Resumen del modelo logaritmico PIB percapita") %>%
+  kable(digits = 3, caption = "Resumen del modelo Produccion Turbina") %>%
   kable_styling(full_width = FALSE)
 ```
 
@@ -350,11 +354,36 @@ $w_8=5$
 
 Mediante los parámetros del modelo ajustado, ¿cuál es la producción promedio de la turbina 4? verifique el resultado calculando el promedio simple para las observaciones de la turbina en cuestión.
 
+```{r preg_08a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+#cálculo de promedio simple turbina T4 
+mean(df_Turbinas$T4) 
+
+#ajuste de modelo lineal 
+modelo_lineal <- lm(Produccion ~ Turbina, data = datos_largos) 
+
+summary(modelo_lineal) 
+tidy(modelo_lineal) %>%
+  kable(digits = 3, caption = "Resumen del modelo Produccion Promedio Turbina 4") %>%
+  kable_styling(full_width = FALSE)
+```
+
+* El promedio simple calculado en R para la turbina T4 es 621.6035MWh, que a su vez también corresponde al intercepto. 
+* El coeficiente de la turbina T4 es la diferencia entre T4 y T1, entonces el promedio de la turbina T4 es: 
+
+  * Prom_T4= intercepto + Coef_TurbinaT4  
+  * Prom_T4= 633.0908 + (-11.4873)  
+  * Prom_T4= 621.6035MWh  
+
+Como se observa, el promedio calculado por los 2 métodos es igual. 
+
 ### Pregunta 9 (Daniel)
 $w_9=5$
 
 Determine mediante una prueba estadística apropiada si existen diferencias significativas entre la producción promedio de energía de las turbinas. ¿A qué es igual el valor del estadístico $𝐹$ $F$ en la prueba de hipótesis correspondiente?
 
+```{r preg_09a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+
+```
 
 
 ### Pregunta 10 (Ivan)
@@ -362,8 +391,33 @@ $w_10=10$
 
 Encuentre los residuales del modelo ajustado y con estos realice una estimación kernel de la densidad (como lo vimos en la primera sesión de clase) junto a un histograma. ¿Encuentra una distribución conocida para los residuales del modelo?
 
+```{r preg_10a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+# Código para obtener los residuales del modelo lineal 
 
+residuales <- resid(modelo_lineal) 
 
+#Se crea un nuevo conjunto de datos con una sola columna llamada “Residuales” para graficar 
+
+residuales_df <- data.frame(Residuales = residuales) 
+
+#Graficar histograma con densidad 
+#histograma y kernel 
+
+ggplot(residuales_df, aes(x = Residuales)) + 
+geom_histogram(aes(y = ..density..), bins = 30, fill = "green", color = "black", alpha = 0.7) + 
+ geom_density(color = "red", size = 1.2) + 
+ theme_dark() + 
+ labs(title = "Distribución de los Residuales del Modelo", 
+       x = "Residuales", 
+       y = "Densidad") 
+```
+
+* La estimación de kernel que corresponde a la curva de color rojo presenta una forma similar a una campana con un ligero sesgo a la derecha, esto indica que se tiene cercanía a la distribución normal 
+* La ligera asimetría que muestra la curva de kernel también indica que este sesgo tiene una distribución positiva. 
+* En cuanto al histograma, se observan 2 picos significativos, el primero cercano a cero que de acuerdo a lo visto en clases es esperado por el ajuste del modelo. El segundo pico está situado en la mitad del intervalo 0-50, indicando que la distribución de los datos no es uniforme y presenta saltos importantes. 
+* Finalmente, no se observan sesgos importantes más allá del que se marca levemente a la derecha. Lo anterior indica baja presencia de valores atípicos. 
+
+En general, con los resultados obtenidos hasta aquí no se observan valores extremos con los que no se acepten la normalidad de los errores. 
 
 
 
