@@ -102,7 +102,7 @@ view(datos)
 ## Modelos de Regresion Lineal
 ________________  
 
-### Pregunta 1 (Andres)
+### Pregunta 1
 $w_1=10$  
 
 Mediante la función `GGally::ggpairs`, grafique los diagramas de dispersión bivariados para el conjunto de datos. ¿Qué tipo de relación observa entre cada par de variables? ¿Visualmente considera que las variables Solar_electricity_net_generation_BKWH y Wind_electricity_net_generation_BKWH presentan varianza constante, (también llamada homoscedasticidad) a través de los valores de la variable GDP_USD_PER_CAPITA?
@@ -180,14 +180,14 @@ Ahora, respecto de la regresión lineal calculada, se puede observar como los va
 
 Finalmente, al retirar los valores atípicos, los modelos de regresion líneal reducen el valor del intercepto de la energia generada en el eje Y (PIB percapita), en otras palabras, acercan las el valor al punto de mayor concetracion de datos. 
 
-### Pregunta 2 (Andres)
+### Pregunta 2
 $w_2=10$  
 
 Para explicar el PIB per capita (GDP_USD_PER_CAPITA) a través de las variables en la tabla `datos` de manera simultánea, ajuste un modelo de regresión con todas las variables explicativas e interprete la salida del mismo con la ayuda de la función `summary()`. ¿Cómo interpretaría los coeficientes estimados del modelo? ¿Cuál variable parece ser más importante para explicar el GDP_USD_PER_CAPITA?
 
 *Ayuda:*
 
-* Recuerde utilizar el símbolo $∼$ para establecer el modelo de regresión.
+* Recuerde utilizar el símbolo $\sim$ para establecer el modelo de regresión.
 * Cuando quiera utilizar una regresión con todas las variables en el conjunto de datos, no hace falta escribir una a una, puede hacer referencia a todas mediante un punto “.”.
 
 Se presenta a continuación el resumen de los modelo solar, eolico y los reducidos:
@@ -200,25 +200,30 @@ tidy(modelo_solar) %>%
 ```
 
 ```{r preg_02b, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
-tidy(modelo_solar2) %>%
-  kable(digits = 3, caption = "Resumen del modelo de regresión solar (Reducido [0,5] TWh)") %>%
-  kable_styling(full_width = FALSE)
-```
-
-```{r preg_02c, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
 tidy(modelo_eolico) %>%
   kable(digits = 3, caption = "Resumen del modelo de regresión eolico") %>%
   kable_styling(full_width = FALSE)
 ```
 
+Con base en los anteriores datos, uno de los aspectos que se visualiza es la gran diferencia en unidades, que hace que la observacion y/o los estadisticos tengan valores pequeños. En otros terminos, el analizar el PIB por ciudadano en USD versus la produccion de energia por pais en TWh implica resultados como el que la pendiente de la regresion sea 0.0000464 TWh/año por cada USD (relacion debil). Ahora si usamos como unidad de energia kWh, y no B_kWh (TWh), la pendiente de la regresion seria 46400 kWh de aumento en energia generada por cada USD de aumento en el PIB percapita, y si este valor se analiza en potencia; no en energia, indicaria que por cada USD que se incrementa el PIB percapita estaria aumentandose la capacidad instalada del pais en aprox. 30kW (Tomando de nuevo en cuenta un factor de planta del 20%).  
+
+Finalmente, un parametro F de 0.8408 y un p-value de 0.3676, sugiere que la variacion del PIB no se asocia significativamente a la variacion de la generacion de fuentes renovables.
+
+```{r preg_02c, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+#tidy(modelo_solar2) %>%
+#  kable(digits = 3, caption = "Resumen del modelo de regresión solar (Reducido [0,5] TWh)") %>%
+#  kable_styling(full_width = FALSE)
+```
+
 ```{r preg_02d, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
-tidy(modelo_eolico2) %>%
-  kable(digits = 3, caption = "Resumen del modelo de regresión eolico (Reducido [0,10] TWh)") %>%
-  kable_styling(full_width = FALSE)
+#tidy(modelo_eolico2) %>%
+#  kable(digits = 3, caption = "Resumen del modelo de regresión eolico (Reducido [0,10] TWh)") %>%
+#  kable_styling(full_width = FALSE)
+
 ```
 
 
-### Pregunta 3 (Diego)
+### Pregunta 3
 $w_3=15$  
 
 Según la salida de `summary()` anterior, ¿cuál es el valor del estadístico 𝐹 del modelo?. Dado su valor y el valor 𝑝
@@ -241,7 +246,7 @@ Con estos valores se obtiene que F-statistic=0.5443 y P-value=0.587, podemos con
 
 Revisando el valor P de cada variable, concluimos que la significancia de cada una (0.542158 para Solar_electricity_net_generation_BKWH y 0.606980 para Wind_electricity_net_generation_BKWH) son valores mayores a 0.05 (ningún *), confirmando de esta manera como lo indicicamos anteriormente  que las variables analizadas no tienen una gran influencia o relación en el comportamiento del PIB per capita. 
 
-### Pregunta 4 (Daniel)
+### Pregunta 4 
 $w_4=15$  
 
 A través de los gráficos asociados al modelo obtenidos con la función `plot()`, mencione respecto a los supuestos de:
@@ -250,7 +255,22 @@ Normalidad de los errores del modelo.
 Varianza constante.
 ¿Parece el modelo seguir los dos supuestos mencionados?
 
-### Pregunta 5 (Zahira)
+```{r preg_04a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+par(mfrow = c(2, 2)) 
+plot(Reg_GDP) 
+```
+
+1. Normalidad de los errores del modelo: Mediante el gráfico Q-Q plot, se evidencia que existe una ligera desviación en las colas. Por lo cuál se concluye que el supuesto de normalidad no se cumple completamente. 
+
+1. Varianza constante (homocedasticidad)): Se evidencia que hay presencia de heterocedasticidad en el modelo, es decir, la varianza de los errores no es constante y cambia con el nivel del PIB predicho. Esto se concluyó a traves de: 
+
+  * El gráfico Residual vs Fitted, se evidencia que los puntos no siguen la linea horizontal punteada, formando una curva y siguendo una dispersion no homogenea.  
+
+  * El gráfico Scale-Location los valores de √(residuos estandarizados) disminuyen a medida que aumenta el ajuste. 
+
+Finalmente se concluye que el modelo no cumple con los supuestos de regresión. 
+
+### Pregunta 5
 $w_5=20$  
 
 Estime ahora un modelo de regresión lineal múltiple, pero esta vez realice una transformación de logaritmo sobre la variable de respuesta `log(GDP_USD_PER_CAPITA)`. ¿Qué pasa ahora con el modelo cuando realizamos esta transformación? ¿Cuál modelo presenta residuales más cercanos a la distribución normal?
@@ -289,7 +309,7 @@ ________________
 
 En el conjunto de datos `turbinas_prod.csv` cuenta con la producción mensual promedio de 5 turbinas eólicas ubicadas en la Guajira. Esta información se tiene por un total de 12 meses para cada turbina y la medición esta dada en MWh. Se busca determinar si existen diferencias significativas entre la producción promedio de energía de las turbinas.
 
-### Pregunta 6 (Ivan)
+### Pregunta 6
 $w_6=5$
 
 Realice el boxplot de producción para las diferentes turbinas y determine visualmente si observa diferencias en la producción de energía de las 5 turbinas. ¿Parece haber varianza constante en las observaciones de las turbinas?
@@ -330,7 +350,7 @@ Del gráfico visualmente se puede determinar lo siguiente:
 * T3 presenta una menos variabilidad. 
 * Todas las turbinas tienen diferentes valores de producción de energía. 
 
-### Pregunta 7 (Diego)
+### Pregunta 7
 $w_7=5$
 
 Ajuste un modelo de regresión lineal simple para explicar la producción usando la variable de turbina ¿A qué es igual el R2 del modelo ajustado? ¿Cómo interpreta los parámetros estimados del modelo? ¿Cuál es la categoría de referencia pra el modelo ajustado?
@@ -349,7 +369,7 @@ Los coeficientes estiman la diferencia promedio en producción respecto a la tur
 
 La categoría de referencia es la Turbina T1, ya que no aparece explícitamente en los coeficientes del modelo y el valor de estimación estándar equivale al promedio de su producción igual a 633.0908. 
 
-### Pregunta 8 (Ivan)
+### Pregunta 8
 $w_8=5$
 
 Mediante los parámetros del modelo ajustado, ¿cuál es la producción promedio de la turbina 4? verifique el resultado calculando el promedio simple para las observaciones de la turbina en cuestión.
@@ -376,17 +396,23 @@ tidy(modelo_lineal) %>%
 
 Como se observa, el promedio calculado por los 2 métodos es igual. 
 
-### Pregunta 9 (Daniel)
+### Pregunta 9
 $w_9=5$
 
 Determine mediante una prueba estadística apropiada si existen diferencias significativas entre la producción promedio de energía de las turbinas. ¿A qué es igual el valor del estadístico $𝐹$ $F$ en la prueba de hipótesis correspondiente?
 
 ```{r preg_09a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+modelo_anova <- aov(Produccion ~ Turbina, data = datos_largos) 
+summary(modelo_anova) 
 
+tidy(modelo_anova) %>%
+  kable(digits = 3, caption = "Resumen del modelo ANOVA Produccion Turbina") %>%
+  kable_styling(full_width = FALSE)
 ```
 
+Teniendo en cuenta que el valor de F values es bajo (0.564), lo cual indica que las diferencias entre grupos no son significativamente mayores que la variabilidad interna de cada grupo, y que el p-valor = 0.69; se concluye que, no hay evidencia estadísticamente significativa de que las turbinas tengan diferentes producciones promedio. 
 
-### Pregunta 10 (Ivan)
+### Pregunta 10
 $w_10=10$  
 
 Encuentre los residuales del modelo ajustado y con estos realice una estimación kernel de la densidad (como lo vimos en la primera sesión de clase) junto a un histograma. ¿Encuentra una distribución conocida para los residuales del modelo?
