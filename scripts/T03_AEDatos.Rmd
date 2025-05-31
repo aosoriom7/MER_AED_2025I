@@ -64,8 +64,8 @@ library(usethis)
 library(writexl)
 
 #carga de datos separados con sep=; 
-df_EIA <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_03.csv",sep=";",header = TRUE)
-df_Turbinas <- read.table("/Users/aosoriom/Repos/MER_AEDatos/datasets/turbinas_prod.csv",sep=";",header = TRUE)
+df_EIA <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/datos_taller_03.csv",sep=";",header = TRUE)
+df_Turbinas <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/turbinas_prod.csv",sep=",",header = TRUE)
 
 datos = df_EIA %>% as_tibble() %>% # operador pipe (tuberia) encadena operaciones (~ y luego...)
              dplyr::filter(!Country %in% c('UnitedStates','China','SaudiArabia','Russia')) %>% 
@@ -83,9 +83,12 @@ datosRed = df_EIA %>% as_tibble() %>% # operador pipe (tuberia) encadena operaci
                              Wind_electricity_net_generation_BKWH <=10) %>% 
              dplyr::mutate(GDP_USD_PER_CAPITA = GDP_USD/Population) %>% 
              dplyr::select(-c('GDP_USD','Population')) 
+
+#datos_largos <- pivot_longer(df_Turbinas, cols = starts_with("T"), 
+#                             names_to = "Turbina", values_to = "Produccion") 
 ```
 
-resumen de datos:
+Resumen de datos:
 ```{r previsualizacion, message=FALSE, warning=FALSE}
 
 view(datos)
@@ -221,7 +224,18 @@ Según la salida de `summary()` anterior, ¿cuál es el valor del estadístico �
 
 En la función `summary()` no se obtienen los asteriscos mencionados en clase. Sin embargo, este presenta una fila de códigos de significancia: `signif. codes: pvalue < 0 - ‘***’ pvalue < 0.001 ‘**’ pvalue < 0.01 ‘*’ pvalue < 0.05 ‘.’ pvalue < 0.1 ‘ ’`
 
+```{r preg_03a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+Reg_GDP <- lm(GDP_USD_PER_CAPITA ~ ., data = datos) 
 
+summary(Reg_GDP) 
+tidy(Reg_GDP) %>%
+  kable(digits = 3, caption = "Resumen del modelo PIB percapita") %>%
+  kable_styling(full_width = FALSE)
+```
+
+Con estos valores se obtiene que F-statistic=0.5443 y P-value=0.587, podemos concluir que el valor estadístico de F-statics es muy bajo, lo cual indica que las variables no tienen un efecto significativo en el PIB (GDP_USD_PER_CAPITA). Por otro lado el valor p-value del modelo es 0.587, mucho mayor que 0.05, esto indica que no son significativas estadísticamente las variables tenidas en cuenta  (Solar electricity net generation y Wind electricity net generation) para explicar conjuntamente el comportamiento del  PIB per cápita o (GDP_USD_PER_CAPITA). 
+
+Revisando el valor P de cada variable, concluimos que la significancia de cada una (0.542158 para Solar_electricity_net_generation_BKWH y 0.606980 para Wind_electricity_net_generation_BKWH) son valores mayores a 0.05 (ningún *), confirmando de esta manera como lo indicicamos anteriormente  que las variables analizadas no tienen una gran influencia o relación en el comportamiento del PIB per capita. 
 
 ### Pregunta 4 (Daniel)
 $w_4=15$  
@@ -232,12 +246,39 @@ Normalidad de los errores del modelo.
 Varianza constante.
 ¿Parece el modelo seguir los dos supuestos mencionados?
 
-
-
 ### Pregunta 5 (Zahira)
 $w_5=20$  
 
 Estime ahora un modelo de regresión lineal múltiple, pero esta vez realice una transformación de logaritmo sobre la variable de respuesta `log(GDP_USD_PER_CAPITA)`. ¿Qué pasa ahora con el modelo cuando realizamos esta transformación? ¿Cuál modelo presenta residuales más cercanos a la distribución normal?
+
+```{r preg_05a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+Nueva_Regresion <- lm(log(GDP_USD_PER_CAPITA)~ ., data = datos) 
+
+summary(Nueva_Regresion) 
+tidy(Nueva_Regresion) %>%
+  kable(digits = 3, caption = "Resumen del modelo logaritmico PIB percapita") %>%
+  kable_styling(full_width = FALSE)
+```
+
+De los resultados anteriores se observan coeficientes positivos para la generación eólica y solar, representando que en general un aumento en estas variables está relacionado con un aumento en el logaritmo del PIB per cápita. Esto es consistente con la regresión sin el logaritmo. 
+
+Sin embargo, el valor P de la regresión es de 0.34, y el valor P para la generación solar y eólica se encuentra en 0.244 y 0.746, respectivamente. Como los tres valores P presentan valores altos, se concluye que estas variables no explican al logaritmo del PIB per cápita de forma lineal.  
+
+A esto se le suma que el R2 tiene también un valor bajo, de 0.08. 
+
+Para verificar cómo se comportan los residuales de esta nueva regresión se grafica lo siguiente: 
+
+```{r preg_05b, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+par(mfrow = c(2,2)) 
+plot(Nueva_Regresion) 
+
+```
+
+De la imagen anterior, de la gráfica Q-Q se observa que los residuales siguen una línea recta de mejor manera que en el caso de la regresión sin el logaritmo, indicando que los residuales se acercan más a una distribución normal. No obstante, hay algunos puntos que se salen de esa línea recta.  
+
+Una observación interesante es entonces que el hecho de aplicar el logaritmo al PIB per cápita no afectó la regresión en cuanto a que se mantiene la conclusión de que no hay una relación lineal entre las variables, pero sí mejoró el comportamiento estadístico de los residuales. 
+
+A pesar de la distribución normal de los residuales mostró una mejora, en las gráficas Residuals vs Fitted y Scale-Location se evidencia que los puntos se encuentran concentrados hacia la izquierda y hay algunos puntos que siguen una línea diagonal. Por lo tanto, la varianza de los errores continúa siendo no constante, es decir, no hay homocedasticidad. 
 
 ## ANOVA
 ________________  
@@ -253,13 +294,56 @@ Realice el boxplot de producción para las diferentes turbinas y determine visua
 
 Puede resultarle conveniente usar la función `pivot_longer`, con la cual, puede cambiar el formato ancho al largo de la base de datos, Basta con: `pivot_longer(datos,cols=columnas_de_base,names_to='Nombre_nueva_col1',values_to='Nombre_nueva_col2')`
 
+```{r preg_06a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+# Reorganizar el dataframe a formato largo y se define la variable datos_largos 
+# pivot_longer es un código que transforma un grupo de datos de formato ancho a largo 
+#cols = starts_with("T") indica cuáles columnas se van a convertir de ancho a largo, para este caso las que empiezan con T 
+#names_to = "Turbina" hace que los nombres T1, T2, T3, T4 y T5 cambie a Turbina 
+#values_to = "Produccion" hace que los valores queden en una columna denominada Production 
 
+datos_largos <- pivot_longer(df_Turbinas, cols = starts_with("T"), 
+                             names_to = "Turbina", values_to = "Produccion") 
+
+#ggplot… Creación de gráfico con los datos de la variable creada “datos_largos” 
+#fill pone colores a cada boxplot 
+
+ggplot(datos_largos, aes(x = Turbina, y = Produccion, fill = Turbina)) + 
+  geom_boxplot() + 
+
+  labs(title = "Producción Mensual por Turbina (MWh)", 
+       x = "Turbina", y = "Producción (MWh)") + 
+  theme_dark() 
+```
+
+Del gráfico visualmente se puede determinar lo siguiente: 
+
+* T1 y T2 con T4 y T5 visualmente parecen tener producciones promedio similares. 
+* T4 y T5 tienen rangos intercuartiles estrechos, de manera similar ocurre con T3. 
+* T3 muestra una menor mediana. 
+* T1 y T2 tienen bigotes largos comparados con las otras turbinas, lo que indica una mayor variabilidad de los datos y que están más lejos del rango intercuartil. 
+* T2 y T4 muestran una dispersión. 
+* T4 muestra 2 posibles valores atípicos, mientras que T5 muestra 1. 
+* T3 presenta una menos variabilidad. 
+* Todas las turbinas tienen diferentes valores de producción de energía. 
 
 ### Pregunta 7 (Diego)
 $w_7=5$
 
 Ajuste un modelo de regresión lineal simple para explicar la producción usando la variable de turbina ¿A qué es igual el R2 del modelo ajustado? ¿Cómo interpreta los parámetros estimados del modelo? ¿Cuál es la categoría de referencia pra el modelo ajustado?
 
+```{r preg_07a, results='asis', message=FALSE, warning=FALSE, echo=FALSE}
+modelo_turbinas <- lm(Produccion ~ Turbina, data = datos_largos) 
+summary(modelo_turbinas) 
+tidy(modelo_turbinas) %>%
+  kable(digits = 3, caption = "Resumen del modelo logaritmico PIB percapita") %>%
+  kable_styling(full_width = FALSE)
+```
+
+El $R^2$ ajustado es igual a -0.03049, lo que indica que el modelo no mejora la explicación sobre la media. 
+
+Los coeficientes estiman la diferencia promedio en producción respecto a la turbina de referencia T1.  En este caso la producción promedio de la T1 es igual a 633.0908 y por ejemplo en promedio la turbina T5 produce 2.0254 más que la T1. 
+
+La categoría de referencia es la Turbina T1, ya que no aparece explícitamente en los coeficientes del modelo y el valor de estimación estándar equivale al promedio de su producción igual a 633.0908. 
 
 ### Pregunta 8 (Ivan)
 $w_8=5$
@@ -295,9 +379,9 @@ Encuentre los residuales del modelo ajustado y con estos realice una estimación
 # Referencias
 
 1. [Introduction to R markdown](https://rmarkdown.rstudio.com/articles_intro.html) 
-1. MarkDown Guide - [Basic Syntax](https://www.markdownguide.org/basic-syntax/)
+1. [MarkDown Guide - Basic Syntax](https://www.markdownguide.org/basic-syntax/)
 1. [Data Visualization CheatSheet](https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf)
-1. [Repositorio](https://github.com/aosoriom7/MER_AED_2025I) del Taller en Github
-1. [Pagina](https://aosoriom7.github.io/MER_AED_2025I/scripts/02.html) web del taller en Gihub Pages
+1. [Repositorio del Taller en Github](https://github.com/aosoriom7/MER_AED_2025I) 
+1. [Pagina web del taller en Gihub Pages](https://aosoriom7.github.io/MER_AED_2025I/scripts/T03_AEDatos.html) 
 1. [Solar Power by Country](https://en.wikipedia.org/wiki/Solar_power_by_country)
 
