@@ -1,0 +1,177 @@
+---
+title: "Analisis Estadistico de Datos"
+author: "Grupo 05"
+date: "I-2025"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+  pdf_document:
+    toc: true
+output_dir: "/Users/aosoriom/Repos/MER_AEDatos/docs" 
+---
+
+<!-- Para dejar limitadores visuales (lineas divisorias) usar ________________  -->
+<!-- Para dejar un salto de linea se deja un doble espacio al final  -->
+<!-- con toc_float: true la table of contents queda a la izquierda   -->
+<!-- con rmarkdown::render("scripts/02.Rmd", output_dir = "docs") se logro poner el html en /docs 1 vez   -->
+
+________________  
+
+# Trabajo Final
+**Arboles de Decision - Clasificacion**   
+**Maestría en Energías Renovables**  
+**Escuela de Ingeniería, Ciencia y Tecnología**  
+**Universidad del Rosario**  
+**Integrantes:**  
+Zahira Itzel González Cleves  
+Diego Alejandro Mejía Montañez  
+Daniel Felipe Russi Aragón  
+Iván Camilo Granados Niño  
+Andrés Alfonso Osorio Marulanda
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Conceptos
+
+Teniendo presente que:
+
+* **trimmed:** Es la media recortada: calcula la media después de eliminar un porcentaje (por defecto 10%) de los valores más extremos (los más altos y bajos). Sirve para evitar que valores atípicos influyan en el promedio.
+
+* **Desviación absoluta mediana (MAD Median Absolute Deviation)**: mide la dispersión de los datos respecto a la mediana, siendo más robusta que la desviación estándar frente a valores atípicos
+
+* **Coeficiente de asimetría:** mide la simetría de la distribución.  - Si skew = 0, la distribución es simétrica.  - Si skew > 0, hay sesgo a la derecha (cola larga hacia la derecha).  - Si skew < 0, hay sesgo a la izquierda (cola larga hacia la izquierda).
+
+![](https://www.biologyforlife.com/uploads/2/2/3/9/22392738/c101b0da6ea1a0dab31f80d9963b0368_orig.png){width=80% fig-align="center"}
+
+* **Curtosis:** mide qué tan “picuda” o “plana” es la distribución en comparación con una normal.  $K = 0$ indica forma normal; $k> 0$ (leptocúrtica): más alta y con colas pesadas.  $K < 0$ (platicúrtica): más plana.
+
+![](https://miro.medium.com/v2/resize:fit:1400/0*-1qO7MRp9faS7ffl){width=35% fig-align="center"}
+
+## Analisis Preliminar
+
+```{r leer_datasets, results='asis', message=FALSE, warning=FALSE}
+
+library(broom)
+library(caret)
+library(dplyr)
+library(factoextra)
+library(FactoMineR)
+library(forcats)
+library(ggExtra)
+library(GGally)
+library(ggplot2)
+library(kableExtra)
+library(knitr)
+library(lubridate)
+library(MASS)
+library(plotly)
+library(psych)
+library(readr)
+library(rpart)
+library(rpart.plot)
+library(stringr)
+library(tibble)
+library(tidyr)
+library(tidyverse)
+library(usethis)
+library(writexl)
+
+#Carga de datos separados con sep=; 
+df_wineQ01 <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/WineQT.csv",sep=",",header = TRUE)
+df_wineQ02 <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/wine_quality_classification.csv",sep=",",header = TRUE)
+
+```
+
+A continuacion se presentan los datos contenidos en el dataset
+
+https://www.kaggle.com/datasets/yasserh/wine-quality-dataset?resource=download
+
+```{r basicAnalysis01, echo=TRUE}
+str(df_wineQ01)
+summary(df_wineQ01)
+
+```
+
+[pivot_longer](https://www.google.com/search?sca_esv=11af79cee1598284&rlz=1C5CHFA_enCO1130CO1130&sxsrf=AE3TifPUEn-qG9FJYT3pqeLukGII5sYLCg:1748906581582&q=pivot_longer&udm=2&fbs=AIIjpHxU7SXXniUZfeShr2fp4giZ1Y6MJ25_tmWITc7uy4KIeiAkWG4OlBE2zyCTMjPbGmPgfe_7ak8LUsonpWCvT6w6csnyTymMQ2XHqFKxVhyiTvlKdDqf4j4YZ77rN_9LUAibPEUQHKga7mhg76LzTD68tGv5HIDm2gMUEtQapalE8cWtTXq2kRsyENVXN3dJpqrU4DwUrDC8l1f65BlzdB8lHc5NMA&sa=X&ved=2ahUKEwjdq6nc8NONAxX7RzABHXoyNs4QtKgLegQIFxAB&biw=972&bih=968&dpr=1#vhid=75AGAVC0d-PPxM&vssid=mosaic)
+```{r basicAnalysis02, echo=TRUE}
+df_wineQ01_long <- df_wineQ01 %>%
+  pivot_longer(cols = where(is.numeric), names_to = "Variable", values_to = "Valor")
+
+ggplot(df_wineQ01_long, aes(x = Valor)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 30) +
+  facet_wrap(~ Variable, scales = "free", ncol = 3) +
+  theme_minimal() +
+  labs(title = "Histogramas por variable",
+       x = "", y = "Frecuencia")
+```
+
+A continuacion se presentan los histogramas
+
+```{r basicAnalysis03, echo=TRUE}
+# Estadísticos descriptivos
+resumen02 <- psych::describe(df_wineQ01)
+
+# Mostrar tabla formateada
+kable(resumen02, caption = "Resumen descriptivo de Variables Vino", digits = 2)
+
+```
+
+## Preparacion, Entrenamiento y Prueba del Modelo 
+
+Se procede ahora a preparar el conjunto de datos para el analisis de arbol y convertir `quality` en factor para q `rpart` lo interprete bien:
+
+```{r preparacion01, echo=TRUE}
+df_wine <- df_wineQ01 %>%
+  dplyr::select(-Id) %>% # Quita la columna 'Id' (la columna de identificación)
+  dplyr::mutate(quality = as.factor(quality)) # Convierte la columna 'quality' a tipo factor
+```
+
+Se crean ahora los conjuntos de entrenamiento y pruebas, teniendo una semilla para que sea reproducible
+
+```{r preparacion02, echo=TRUE}
+set.seed(1234)
+
+# Definicion conjunto de Entrenamiento (Train) 
+wineQ_train <- sample_frac(df_wine, 0.7)
+
+# Definicion conjunto de Prueba (Test) 
+wineQ_test <- setdiff(df_wine, wineQ_train)
+
+```
+
+Una vez definidos los conjuntos de datos, se procede a entrenar el modelo:
+
+```{r entrenamiento01, echo=TRUE}
+
+modl_arbol01 <- rpart(quality ~ ., data=wineQ_train, method="class")
+modl_arbol01
+
+```
+
+Del anterior se puede ver el esquema de arbol de clasificacion, cada linea presenta uno de los nodos y la regla de clasificacion correspondiente {@ref(Ref01)}
+
+De forma visual el resultado del arbol es el siguiente: 
+
+```{r entrenamiento02, echo=TRUE}
+rpart.plot(modl_arbol01)
+
+```
+
+# Referencias
+
+1. [Introduction to R markdown](https://rmarkdown.rstudio.com/articles_intro.html){#Ref01}
+1. [MarkDown Guide - Basic Syntax](https://www.markdownguide.org/basic-syntax/){#Ref02}
+1. [Data Visualization CheatSheet](https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf)
+1. [Repositorio del Taller en Github](https://github.com/aosoriom7/MER_AED_2025I) 
+1. [Pagina web del taller en Gihub Pages](https://aosoriom7.github.io/MER_AED_2025I/scripts/T04_Final_AEDatos.html) 
+1. [Arboles de decisión con R - Clasificación](https://rpubs.com/jboscomendoza/arboles_decision_clasificacion){#Ref06}
+1. [Conjunto de Datos](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset?resource=download)
+1. [Programacion en R](https://rsanchezs.gitbooks.io/rprogramming/content/chapter9/dplyr.html)
+1. [tidyverse](https://www.tidyverse.org/)
+1. [Aprendizaje Supervisado en R](https://fervilber.github.io/Aprendizaje-supervisado-en-R/arboles.html)
+1. [Comandos Basicos de la sintaxis de Markdown](https://rpubs.com/gustavomtzv/862622)
