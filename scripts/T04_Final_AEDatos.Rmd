@@ -38,6 +38,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Conceptos
 
+### Estadisticos Basicos
 Teniendo presente que:
 
 * **trimmed:** Es la media recortada: calcula la media después de eliminar un porcentaje (por defecto 10%) de los valores más extremos (los más altos y bajos). Sirve para evitar que valores atípicos influyan en el promedio.
@@ -52,7 +53,11 @@ Teniendo presente que:
 
 ![](https://miro.medium.com/v2/resize:fit:1400/0*-1qO7MRp9faS7ffl){width=35% fig-align="center"}
 
-## Analisis Preliminar
+### Arboles de Decision
+
+!
+
+## Exploracion de Datos
 
 ```{r leer_datasets, results='asis', message=FALSE, warning=FALSE}
 
@@ -91,14 +96,14 @@ A continuacion se presentan los datos contenidos en el dataset
 
 https://www.kaggle.com/datasets/yasserh/wine-quality-dataset?resource=download
 
-```{r basicAnalysis01, echo=TRUE}
+```{r exploracion01, echo=TRUE}
 str(df_wineQ01)
 summary(df_wineQ01)
 
 ```
 
 [pivot_longer](https://www.google.com/search?sca_esv=11af79cee1598284&rlz=1C5CHFA_enCO1130CO1130&sxsrf=AE3TifPUEn-qG9FJYT3pqeLukGII5sYLCg:1748906581582&q=pivot_longer&udm=2&fbs=AIIjpHxU7SXXniUZfeShr2fp4giZ1Y6MJ25_tmWITc7uy4KIeiAkWG4OlBE2zyCTMjPbGmPgfe_7ak8LUsonpWCvT6w6csnyTymMQ2XHqFKxVhyiTvlKdDqf4j4YZ77rN_9LUAibPEUQHKga7mhg76LzTD68tGv5HIDm2gMUEtQapalE8cWtTXq2kRsyENVXN3dJpqrU4DwUrDC8l1f65BlzdB8lHc5NMA&sa=X&ved=2ahUKEwjdq6nc8NONAxX7RzABHXoyNs4QtKgLegQIFxAB&biw=972&bih=968&dpr=1#vhid=75AGAVC0d-PPxM&vssid=mosaic)
-```{r basicAnalysis02, echo=TRUE}
+```{r exploracion02, echo=TRUE}
 df_wineQ01_long <- df_wineQ01 %>%
   pivot_longer(cols = where(is.numeric), names_to = "Variable", values_to = "Valor")
 
@@ -112,7 +117,16 @@ ggplot(df_wineQ01_long, aes(x = Valor)) +
 
 A continuacion se presentan los histogramas
 
-```{r basicAnalysis03, echo=TRUE}
+```{r expoloracion03, echo=TRUE}
+# Estadísticos descriptivos
+resumen02 <- psych::describe(df_wineQ01)
+
+# Mostrar tabla formateada
+kable(resumen02, caption = "Resumen descriptivo de Variables Vino", digits = 2)
+
+```
+
+```{r exploracion04, echo=TRUE}
 # Estadísticos descriptivos
 resumen02 <- psych::describe(df_wineQ01)
 
@@ -137,10 +151,13 @@ Se crean ahora los conjuntos de entrenamiento y pruebas, teniendo una semilla pa
 set.seed(1234)
 
 # Definicion conjunto de Entrenamiento (Train) 
-wineQ_train <- sample_frac(df_wine, 0.7)
+wineQ_train <- sample_n(df_wine, 750)
+
+# Definicion conjunto de Validacion (Validation) 
+wineQ_valdtn <- sample_n(df_wine, 300)
 
 # Definicion conjunto de Prueba (Test) 
-wineQ_test <- setdiff(df_wine, wineQ_train)
+wineQ_test <- sample_n(df_wine, 93)
 
 ```
 
@@ -148,8 +165,9 @@ Una vez definidos los conjuntos de datos, se procede a entrenar el modelo:
 
 ```{r entrenamiento01, echo=TRUE}
 
-modl_arbol01 <- rpart(quality ~ ., data=wineQ_train, method="class")
-modl_arbol01
+arbolWineTrn <- rpart(quality ~ ., data=wineQ_train, method="class") 
+#quality es campo clasificacion
+arbolWineTrn
 
 ```
 
@@ -158,7 +176,50 @@ Del anterior se puede ver el esquema de arbol de clasificacion, cada linea prese
 De forma visual el resultado del arbol es el siguiente: 
 
 ```{r entrenamiento02, echo=TRUE}
-rpart.plot(modl_arbol01)
+rpart.plot(arbolWineTrn)
+
+```
+
+De dicha imagen, en cada cuadro se evidencian 3 lineas de numeros:  
+  
+* **1er nivel:** etiqueta, categoria o Factor al que corresponde el mayor porcentaje relacionada.    
+* **2o nivel:** proporcion de casos que pertenece cada categoria, porcentaje de casos al que pertenece.   
+* **3r nivel:** porcentaje del total de los datos que se agrupa en esa clasificacion.  
+
+   
+Una vez con el modelo definido, se procede a realizar el desarrollo de prediccion con la funcion `predict` haciendo uso del conjunto de validación. 
+
+```{r entrenamiento03, echo=TRUE}
+arbolPrediccion_01 <- predict(arbolWineTrn, newdata=wineQ_valdtn, type="class")
+head(arbolPrediccion_01, 10)
+head(wineQ_valdtn[["quality"]], 10)
+```
+
+Con base en los resultados de la predicción y comparado con datos del conjunto de validacion, se evidencian diferencias entre los primeros 10 registros de ambos conjuntos.
+
+Luego, se procede a realizar el analisis de los resultados comparando los datos de la prediccion con los datos reales del conjunto de validacion generando la matriz de confusion con base en las referencias de la siguiente imagen
+
+![](https://live.staticflickr.com/65535/48051372813_0e6a4a0806_b.jpg){width=80%}
+
+```{r entrenamiento04, echo=TRUE}
+confusionMatrix(arbolPrediccion_01, wineQ_valdtn[["quality"]])
+
+```
+
+A fin de entender mas los detalles de la matriz de confusion se procede a contar los registros con `quality` igual a 5 en el conjunto de entrenamiento `wineQ_valdtn` y de prediccion `arbolPrediccion_01`
+
+```{r entrenamiento05, echo=TRUE}
+df_wineQ_valdtn_filter <- wineQ_valdtn %>%
+  filter(quality == 5) 
+
+cant_valdtn <- nrow(df_wineQ_valdtn_filter)  # Sumar los conteos
+cant_valdtn
+
+df_arbolPrediccion_01_filter <- arbolPrediccion_01 %>%
+  filter(5)
+
+cant_predtn <- nrow(df_arbolPrediccion_01_filter)
+cant_predtn
 
 ```
 
@@ -175,3 +236,5 @@ rpart.plot(modl_arbol01)
 1. [tidyverse](https://www.tidyverse.org/)
 1. [Aprendizaje Supervisado en R](https://fervilber.github.io/Aprendizaje-supervisado-en-R/arboles.html)
 1. [Comandos Basicos de la sintaxis de Markdown](https://rpubs.com/gustavomtzv/862622)
+1. [Manual de Analisis Predictivo](https://rpubs.com/paraneda/predictivo)
+1. [Package rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf)
