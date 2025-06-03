@@ -191,8 +191,9 @@ Una vez con el modelo definido, se procede a realizar el desarrollo de prediccio
 
 ```{r entrenamiento03, echo=TRUE}
 arbolPrediccion_01 <- predict(arbolWineTrn, newdata=wineQ_valdtn, type="class")
-head(arbolPrediccion_01, 10)
-head(wineQ_valdtn[["quality"]], 10)
+head(arbolPrediccion_01, 50)
+head(wineQ_valdtn[["quality"]], 50)
+#qualityPr
 ```
 
 Con base en los resultados de la predicción y comparado con datos del conjunto de validacion, se evidencian diferencias entre los primeros 10 registros de ambos conjuntos.
@@ -206,6 +207,18 @@ confusionMatrix(arbolPrediccion_01, wineQ_valdtn[["quality"]])
 
 ```
 
+De los resultados obtenidos, para el caso del parametro de calidad 5, se puede observar en la imagen para la matriz de confusion que:
+
+* Verdaderos Positivos (TP, si y si): son aquellos valores pronosticados como calidad 5 por el modelo y que efectivamente son calidad 5. Corresponden al cruce de la fila y columna 5, totalizan 96 concidencias y se muestran en el recuadro **<span style="color:#4A90E2">azul</span>**-  
+
+* Falsos Positivos (FP si pero no): son aquellos valores pronosticados como calidad 5 por el modelo yq eu corresponden a otras calidades segun el conjunto de validacion. Corresponden a los elementos de la fila 5 de columnas diferentes (3, 4, 6, 7, 8), totalizan 29 y se muestran en los recuadros **<span style="color:#FF5A00">naranjas</span>**.   
+
+* Falsos Negativos (FN no pero si): son aquellos valores pronosticados como calidades diferentes a 5 por el modelo y que en realidad corresponde a dicha calidad segun el conjunto de validacion. Corresponden a los elementos de la columna 5 de filas diferentes (3, 4, 6, 7, 8), totalizan 45 y se muestran en los recuadros **<span style="color:#FFB800">amarillos</span>**.  
+
+* Verdaderos Positivos (TN no y no): son aquellos valores pronosticados como calidades diferentes a 5 por el modelo y que efectivamente no corresponden a dicha calidad segun el conjunto de validacion. Corresponden a los elementos diferentes de la columna y fila 5, totalizan 130 y se muestran en los recuadros **<span style="color:#7ED321">verde</span>**.  
+
+![](https://github.com/aosoriom7/MER_AED_2025I/blob/main/imagenes/MatrizConfusion_01.png?raw=true){width=50%}
+
 A fin de entender mas los detalles de la matriz de confusion se procede a contar los registros con `quality` igual a 5 en el conjunto de entrenamiento `wineQ_valdtn` y de prediccion `arbolPrediccion_01`
 
 ```{r entrenamiento05, echo=TRUE}
@@ -214,12 +227,6 @@ df_wineQ_valdtn_filter <- wineQ_valdtn %>%
 
 cant_valdtn <- nrow(df_wineQ_valdtn_filter)  # Sumar los conteos
 cant_valdtn
-
-df_arbolPrediccion_01_filter <- arbolPrediccion_01 %>%
-  filter(5)
-
-cant_predtn <- nrow(df_arbolPrediccion_01_filter)
-cant_predtn
 
 ```
 
