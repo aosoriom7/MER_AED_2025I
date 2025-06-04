@@ -120,7 +120,7 @@ wineQ_test <- sample_n(df_wine, 93)
 
 ## Entrenamiento y Prueba del Modelo 
 
-Una vez definidos los conjuntos de datos, se procede a entrenar el modelo con el conjunto de datos haciendo uso de la funcion `rpart` y el mayor de lso 3 conjuntos de datos (Conjunto de Entrenamiento):
+Una vez definidos los conjuntos de datos, se procede a entrenar el modelo con el conjunto de datos haciendo uso de la funcion `rpart` y el mayor de los 3 conjuntos de datos (Conjunto de Entrenamiento):
 
 ```{r entrenamiento01, echo=TRUE}
 
@@ -129,20 +129,22 @@ arbolWineTrn
 
 ```
 
-Como resultado del anterior fragmento de codigo, se observa el esquema de arbol de clasificacion obtenido a continuacion, en donde cada linea presenta uno de los nodos y la regla de clasificacion correspondiente.
+Como resultado del anterior fragmento de codigo, se observa el esquema de arbol de clasificacion obtenido, en donde cada linea presenta los resultados de cada uno de los nodos y la regla de clasificacion correspondiente. Por ejemplo para la linea 2), que indica alli `2) alcohol< 10.35 393 148 5 (0.01 0.033 0.62 0.3 0.028 0.0051)`, indica que el criterio de decision del arbol es si el alcohol que contiene el vino es menor que 10.35  ($Alcohol<10.35$), que de los 750 registros del conjunto de entrenamiento **393** cumplen con este criterio y de ellos la categoria dominante es la **5** con un 62%, finalmente se presenta en parentesis los porcentajes de todas categorias. 
 
- El resultado del arbol (esquema) se observa de forma visual a continuación: 
+Complementando lo anterior en para la linea 3), que indica `3) alcohol>=10.35 357 174 6 (0 0.025 0.19 0.51 0.24 0.034)` el criterio de decision complemente el del punto 2), es decir, si el nivel alcohol que contiene el vino es mayor o igual a 10.35 ($Alcohol\geqslant10.35$) con **357** registros que cumplen el criterio del conjunto de datos y de ellos la categoria dominante es la **6** con un 51%. Con esto, y tomando como referencia los histogramas presentados al inicio de las categorias, se logra segmentar las categorias dominnantes del conjunto total de datos. 
+
+ El resultado visual del arbol (esquema) se presenta a continuación: 
 
 ```{r entrenamiento02, echo=TRUE}
 rpart.plot(arbolWineTrn)
 
 ```
 
-De dicha imagen, en cada cuadro se evidencian 3 lineas de numeros:  
+De dicha imagen, en cada nodo se evidencian 3 lineas de numeros congruentes con lo indicado en parrafos anteriores:  
   
-* **1er nivel:** etiqueta, categoria o Factor (Variable de Clasificacion - `quiality`) con el mayor porcentaje relacionada de todas las defindias para el modelo.    
-* **2o nivel:** proporcion de casos que pertenece cada categoria, porcentaje de casos al que pertenece.   
-* **3r nivel:** porcentaje del total de los datos que se agrupa en esa clasificacion.  
+* **1er nivel:** etiqueta, categoria o Variable de Clasificacion, en el dataset `quiality` (Tipo Factor) que tiene el mayor porcentaje de todas las  definidas para el modelo.    
+* **2o nivel:** proporcion de los registros del conjunto de datos de cada categoria conforme a la segmentacion hecha en el nodo.   
+* **3r nivel:** porcentaje del total del conjunto de los datosque que se concentra en el nodo.  
 
 Una vez, con el modelo definido, se procede a realizar la prediccion con la funcion `predict` haciendo uso del conjunto de validación. 
 
@@ -173,7 +175,7 @@ De la anterior matriz de confusion, para el caso del parametro de calidad 5, se 
 
 * Falsos Negativos (FN no pero si): son aquellos valores pronosticados como calidades diferentes a 5 por el modelo y que en realidad corresponde a dicha calidad segun el conjunto de validacion. Corresponden a los elementos de la columna 5 de filas diferentes (3, 4, 6, 7, 8), totalizan 45 y se muestran en los recuadros **<span style="color:#FFB800">amarillos</span>**.  
 
-* Verdaderos Positivos (TN no y no): son aquellos valores pronosticados como calidades diferentes a 5 por el modelo y que efectivamente no corresponden a dicha calidad segun el conjunto de validacion. Corresponden a los elementos diferentes de la columna y fila 5, totalizan 130 y se muestran en los recuadros **<span style="color:#7ED321">verde</span>**.  
+* Verdaderos Negativos (TN no y no): son aquellos valores pronosticados como calidades diferentes a 5 por el modelo y que efectivamente no corresponden a dicha calidad segun el conjunto de validacion. Corresponden a los elementos diferentes de la columna y fila 5, totalizan 130 y se muestran en los recuadros **<span style="color:#7ED321">verde</span>**.  
 
 ![](https://github.com/aosoriom7/MER_AED_2025I/blob/main/imagenes/MatrizConfusion_01.png?raw=true){width=50%}
 
