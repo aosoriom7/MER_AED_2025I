@@ -11,12 +11,6 @@ output:
     toc: true
 output_dir: "/Users/aosoriom/Repos/MER_AEDatos/docs" 
 ---
-
-<!-- Para dejar limitadores visuales (lineas divisorias) usar ________________  -->
-<!-- Para dejar un salto de linea se deja un doble espacio al final  -->
-<!-- con toc_float: true la table of contents queda a la izquierda   -->
-<!-- con rmarkdown::render("scripts/02.Rmd", output_dir = "docs") se logro poner el html en /docs 1 vez   -->
-
 ________________  
 
 # Trabajo Final
@@ -35,31 +29,10 @@ Andrés Alfonso Osorio Marulanda
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+___________________________________________
+## Exploracion y Preparacion de Datos
 
-## Conceptos
-
-### Estadisticos Basicos
-Teniendo presente que:
-
-* **trimmed:** Es la media recortada: calcula la media después de eliminar un porcentaje (por defecto 10%) de los valores más extremos (los más altos y bajos). Sirve para evitar que valores atípicos influyan en el promedio.
-
-* **Desviación absoluta mediana (MAD Median Absolute Deviation)**: mide la dispersión de los datos respecto a la mediana, siendo más robusta que la desviación estándar frente a valores atípicos
-
-* **Coeficiente de asimetría:** mide la simetría de la distribución.  - Si skew = 0, la distribución es simétrica.  - Si skew > 0, hay sesgo a la derecha (cola larga hacia la derecha).  - Si skew < 0, hay sesgo a la izquierda (cola larga hacia la izquierda).
-
-![](https://www.biologyforlife.com/uploads/2/2/3/9/22392738/c101b0da6ea1a0dab31f80d9963b0368_orig.png){width=80% fig-align="center"}
-
-* **Curtosis:** mide qué tan “picuda” o “plana” es la distribución en comparación con una normal.  $K = 0$ indica forma normal; $k> 0$ (leptocúrtica): más alta y con colas pesadas.  $K < 0$ (platicúrtica): más plana.
-
-![](https://miro.medium.com/v2/resize:fit:1400/0*-1qO7MRp9faS7ffl){width=35% fig-align="center"}
-
-### Arboles de Decision
-
-!
-
-## Exploracion de Datos
-
-```{r leer_datasets, results='asis', message=FALSE, warning=FALSE}
+```{r leer_datasets, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 
 library(broom)
 library(caret)
@@ -88,21 +61,16 @@ library(writexl)
 
 #Carga de datos separados con sep=; 
 df_wineQ01 <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/WineQT.csv",sep=",",header = TRUE)
-df_wineQ02 <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/wine_quality_classification.csv",sep=",",header = TRUE)
-
 ```
 
-A continuacion se presentan los datos contenidos en el dataset
-
-https://www.kaggle.com/datasets/yasserh/wine-quality-dataset?resource=download
+A continuacion se presentan una pequeña porcion de los [datos](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset?resource=download) contenidos en el dataset a fin de conocer mejor las variables
 
 ```{r exploracion01, echo=TRUE}
 str(df_wineQ01)
-summary(df_wineQ01)
-
 ```
 
-[pivot_longer](https://www.google.com/search?sca_esv=11af79cee1598284&rlz=1C5CHFA_enCO1130CO1130&sxsrf=AE3TifPUEn-qG9FJYT3pqeLukGII5sYLCg:1748906581582&q=pivot_longer&udm=2&fbs=AIIjpHxU7SXXniUZfeShr2fp4giZ1Y6MJ25_tmWITc7uy4KIeiAkWG4OlBE2zyCTMjPbGmPgfe_7ak8LUsonpWCvT6w6csnyTymMQ2XHqFKxVhyiTvlKdDqf4j4YZ77rN_9LUAibPEUQHKga7mhg76LzTD68tGv5HIDm2gMUEtQapalE8cWtTXq2kRsyENVXN3dJpqrU4DwUrDC8l1f65BlzdB8lHc5NMA&sa=X&ved=2ahUKEwjdq6nc8NONAxX7RzABHXoyNs4QtKgLegQIFxAB&biw=972&bih=968&dpr=1#vhid=75AGAVC0d-PPxM&vssid=mosaic)
+Se realiza la transformacion de la matriz y se grafican los histogramas de cada variable para lograr un mayor entendimiento de estas:
+
 ```{r exploracion02, echo=TRUE}
 df_wineQ01_long <- df_wineQ01 %>%
   pivot_longer(cols = where(is.numeric), names_to = "Variable", values_to = "Valor")
@@ -115,29 +83,18 @@ ggplot(df_wineQ01_long, aes(x = Valor)) +
        x = "", y = "Frecuencia")
 ```
 
-A continuacion se presentan los histogramas
+Se calculan tambien algunos estadisticos de las variables para aumentar la comprension de los datos que se presentan a continuacion:
 
 ```{r expoloracion03, echo=TRUE}
 # Estadísticos descriptivos
-resumen02 <- psych::describe(df_wineQ01)
+resumen01 <- psych::describe(df_wineQ01)
 
 # Mostrar tabla formateada
-kable(resumen02, caption = "Resumen descriptivo de Variables Vino", digits = 2)
+kable(resumen01, caption = "Resumen descriptivo de Variables Vino 01", digits = 2)
 
 ```
 
-```{r exploracion04, echo=TRUE}
-# Estadísticos descriptivos
-resumen02 <- psych::describe(df_wineQ01)
-
-# Mostrar tabla formateada
-kable(resumen02, caption = "Resumen descriptivo de Variables Vino", digits = 2)
-
-```
-
-## Preparacion, Entrenamiento y Prueba del Modelo 
-
-Se procede ahora a preparar el conjunto de datos para el analisis de arbol y convertir `quality` en factor para q `rpart` lo interprete bien:
+Se procede ahora a preparar el conjunto de datos para el analisis de arbol, se transforma la variable `quality` en factor para que el metodo `rpart` la interprete adecuadamente:
 
 ```{r preparacion01, echo=TRUE}
 df_wine <- df_wineQ01 %>%
@@ -145,7 +102,7 @@ df_wine <- df_wineQ01 %>%
   dplyr::mutate(quality = as.factor(quality)) # Convierte la columna 'quality' a tipo factor
 ```
 
-Se crean ahora los conjuntos de entrenamiento y pruebas, teniendo una semilla para que sea reproducible
+Ahora, se crealos conjuntos de entrenamiento, validación y pruebas de forma aleatoria; se deja una semilla (seed) para que sea reproducible la simulacion. Cada conjunto se define con una cantidad fija de registros; 65.5% aprox. para el conjunto de entrenamiento, 26.5% para validacion y 8% para pruebas:
 
 ```{r preparacion02, echo=TRUE}
 set.seed(1234)
@@ -161,19 +118,20 @@ wineQ_test <- sample_n(df_wine, 93)
 
 ```
 
-Una vez definidos los conjuntos de datos, se procede a entrenar el modelo:
+## Entrenamiento y Prueba del Modelo 
+
+Una vez definidos los conjuntos de datos, se procede a entrenar el modelo con el conjunto de datos haciendo uso de la funcion `rpart` y el mayor de lso 3 conjuntos de datos (Conjunto de Entrenamiento):
 
 ```{r entrenamiento01, echo=TRUE}
 
 arbolWineTrn <- rpart(quality ~ ., data=wineQ_train, method="class") 
-#quality es campo clasificacion
 arbolWineTrn
 
 ```
 
-Del anterior se puede ver el esquema de arbol de clasificacion, cada linea presenta uno de los nodos y la regla de clasificacion correspondiente {@ref(Ref01)}
+Como resultado del anterior fragmento de codigo, se observa el esquema de arbol de clasificacion obtenido a continuacion, en donde cada linea presenta uno de los nodos y la regla de clasificacion correspondiente.
 
-De forma visual el resultado del arbol es el siguiente: 
+ El resultado del arbol (esquema) se observa de forma visual a continuación: 
 
 ```{r entrenamiento02, echo=TRUE}
 rpart.plot(arbolWineTrn)
@@ -182,32 +140,32 @@ rpart.plot(arbolWineTrn)
 
 De dicha imagen, en cada cuadro se evidencian 3 lineas de numeros:  
   
-* **1er nivel:** etiqueta, categoria o Factor al que corresponde el mayor porcentaje relacionada.    
+* **1er nivel:** etiqueta, categoria o Factor (Variable de Clasificacion - `quiality`) con el mayor porcentaje relacionada de todas las defindias para el modelo.    
 * **2o nivel:** proporcion de casos que pertenece cada categoria, porcentaje de casos al que pertenece.   
 * **3r nivel:** porcentaje del total de los datos que se agrupa en esa clasificacion.  
 
-   
-Una vez con el modelo definido, se procede a realizar el desarrollo de prediccion con la funcion `predict` haciendo uso del conjunto de validación. 
+Una vez, con el modelo definido, se procede a realizar la prediccion con la funcion `predict` haciendo uso del conjunto de validación. 
 
 ```{r entrenamiento03, echo=TRUE}
 arbolPrediccion_01 <- predict(arbolWineTrn, newdata=wineQ_valdtn, type="class")
-head(arbolPrediccion_01, 50)
-head(wineQ_valdtn[["quality"]], 50)
-#qualityPr
+#A continuacion las primeras 10 predicciones del modelo
+head(arbolPrediccion_01, 10)
+
+#A continuacion las primeras 10 predicciones del modelo\n")
+head(wineQ_valdtn[["quality"]], 10)
 ```
 
-Con base en los resultados de la predicción y comparado con datos del conjunto de validacion, se evidencian diferencias entre los primeros 10 registros de ambos conjuntos.
+Tomando los resultados de la predicción, y comparado estos con los datos del conjunto de validacion, se evidencian diferencias entre los primeros 10 registros de ambos conjuntos.
 
 Luego, se procede a realizar el analisis de los resultados comparando los datos de la prediccion con los datos reales del conjunto de validacion generando la matriz de confusion con base en las referencias de la siguiente imagen
 
-![](https://live.staticflickr.com/65535/48051372813_0e6a4a0806_b.jpg){width=80%}
 
 ```{r entrenamiento04, echo=TRUE}
 confusionMatrix(arbolPrediccion_01, wineQ_valdtn[["quality"]])
 
 ```
 
-De los resultados obtenidos, para el caso del parametro de calidad 5, se puede observar en la imagen para la matriz de confusion que:
+De la anterior matriz de confusion, para el caso del parametro de calidad 5, se puede observar en la imagen para la matriz de confusion que:
 
 * Verdaderos Positivos (TP, si y si): son aquellos valores pronosticados como calidad 5 por el modelo y que efectivamente son calidad 5. Corresponden al cruce de la fila y columna 5, totalizan 96 concidencias y se muestran en el recuadro **<span style="color:#4A90E2">azul</span>**-  
 
@@ -219,18 +177,7 @@ De los resultados obtenidos, para el caso del parametro de calidad 5, se puede o
 
 ![](https://github.com/aosoriom7/MER_AED_2025I/blob/main/imagenes/MatrizConfusion_01.png?raw=true){width=50%}
 
-A fin de entender mas los detalles de la matriz de confusion se procede a contar los registros con `quality` igual a 5 en el conjunto de entrenamiento `wineQ_valdtn` y de prediccion `arbolPrediccion_01`
-
-```{r entrenamiento05, echo=TRUE}
-df_wineQ_valdtn_filter <- wineQ_valdtn %>%
-  filter(quality == 5) 
-
-cant_valdtn <- nrow(df_wineQ_valdtn_filter)  # Sumar los conteos
-cant_valdtn
-
-```
-
-# Referencias
+Se observa entonces que el modelo tiene una precision del 64%; valor que significa una buena cantida de aciertos en la categoria correcta
 
 1. [Introduction to R markdown](https://rmarkdown.rstudio.com/articles_intro.html){#Ref01}
 1. [MarkDown Guide - Basic Syntax](https://www.markdownguide.org/basic-syntax/){#Ref02}

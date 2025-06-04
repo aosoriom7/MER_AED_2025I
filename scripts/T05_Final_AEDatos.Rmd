@@ -1,0 +1,343 @@
+---
+title: "Analisis Estadistico de Datos"
+author: "Grupo 05"
+date: "I-2025"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+  pdf_document:
+    toc: true
+output_dir: "/Users/aosoriom/Repos/MER_AEDatos/docs" 
+---
+
+<!-- Para dejar limitadores visuales (lineas divisorias) usar ________________  -->
+<!-- Para dejar un salto de linea se deja un doble espacio al final  -->
+<!-- con toc_float: true la table of contents queda a la izquierda   -->
+<!-- con rmarkdown::render("scripts/02.Rmd", output_dir = "docs") se logro poner el html en /docs 1 vez   -->
+
+________________  
+
+# Trabajo Final
+**Arboles de Decision - Clasificacion**   
+**Maestría en Energías Renovables**  
+**Escuela de Ingeniería, Ciencia y Tecnología**  
+**Universidad del Rosario**  
+**Integrantes:**  
+Zahira Itzel González Cleves  
+Diego Alejandro Mejía Montañez  
+Daniel Felipe Russi Aragón  
+Iván Camilo Granados Niño  
+Andrés Alfonso Osorio Marulanda
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Conceptos
+
+### Estadisticos Basicos
+Teniendo presente que:
+
+* **trimmed:** Es la media recortada: calcula la media después de eliminar un porcentaje (por defecto 10%) de los valores más extremos (los más altos y bajos). Sirve para evitar que valores atípicos influyan en el promedio.
+
+* **Desviación absoluta mediana (MAD Median Absolute Deviation)**: mide la dispersión de los datos respecto a la mediana, siendo más robusta que la desviación estándar frente a valores atípicos
+
+* **Coeficiente de asimetría:** mide la simetría de la distribución.  - Si skew = 0, la distribución es simétrica.  - Si skew > 0, hay sesgo a la derecha (cola larga hacia la derecha).  - Si skew < 0, hay sesgo a la izquierda (cola larga hacia la izquierda).
+
+![](https://www.biologyforlife.com/uploads/2/2/3/9/22392738/c101b0da6ea1a0dab31f80d9963b0368_orig.png){width=80% fig-align="center"}
+
+* **Curtosis:** mide qué tan “picuda” o “plana” es la distribución en comparación con una normal.  $K = 0$ indica forma normal; $k> 0$ (leptocúrtica): más alta y con colas pesadas.  $K < 0$ (platicúrtica): más plana.
+
+![](https://miro.medium.com/v2/resize:fit:1400/0*-1qO7MRp9faS7ffl){width=35% fig-align="center"}
+
+### Arboles de Decision
+
+___________________________________________
+## Conjunto Datos 1 - Calidad 3 a 8
+
+### Exploracion y Preparacion de Datos
+
+```{r leer_datasets, results='asis', message=FALSE, warning=FALSE}
+
+library(broom)
+library(caret)
+library(dplyr)
+library(factoextra)
+library(FactoMineR)
+library(forcats)
+library(ggExtra)
+library(GGally)
+library(ggplot2)
+library(kableExtra)
+library(knitr)
+library(lubridate)
+library(MASS)
+library(plotly)
+library(psych)
+library(readr)
+library(rpart)
+library(rpart.plot)
+library(stringr)
+library(tibble)
+library(tidyr)
+library(tidyverse)
+library(usethis)
+library(writexl)
+
+#Carga de datos separados con sep=; 
+df_wineQ01 <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/WineQT.csv",sep=",",header = TRUE)
+df_wineQ02 <- read.csv("/Users/aosoriom/Repos/MER_AEDatos/datasets/wine_quality_classification.csv",sep=",",header = TRUE)
+
+```
+
+A continuacion se presentan los datos contenidos en el dataset
+
+https://www.kaggle.com/datasets/yasserh/wine-quality-dataset?resource=download
+
+```{r exploracion01, echo=TRUE}
+str(df_wineQ01)
+summary(df_wineQ01)
+
+```
+
+[pivot_longer](https://www.google.com/search?sca_esv=11af79cee1598284&rlz=1C5CHFA_enCO1130CO1130&sxsrf=AE3TifPUEn-qG9FJYT3pqeLukGII5sYLCg:1748906581582&q=pivot_longer&udm=2&fbs=AIIjpHxU7SXXniUZfeShr2fp4giZ1Y6MJ25_tmWITc7uy4KIeiAkWG4OlBE2zyCTMjPbGmPgfe_7ak8LUsonpWCvT6w6csnyTymMQ2XHqFKxVhyiTvlKdDqf4j4YZ77rN_9LUAibPEUQHKga7mhg76LzTD68tGv5HIDm2gMUEtQapalE8cWtTXq2kRsyENVXN3dJpqrU4DwUrDC8l1f65BlzdB8lHc5NMA&sa=X&ved=2ahUKEwjdq6nc8NONAxX7RzABHXoyNs4QtKgLegQIFxAB&biw=972&bih=968&dpr=1#vhid=75AGAVC0d-PPxM&vssid=mosaic)
+```{r exploracion02, echo=TRUE}
+df_wineQ01_long <- df_wineQ01 %>%
+  pivot_longer(cols = where(is.numeric), names_to = "Variable", values_to = "Valor")
+
+ggplot(df_wineQ01_long, aes(x = Valor)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 30) +
+  facet_wrap(~ Variable, scales = "free", ncol = 3) +
+  theme_minimal() +
+  labs(title = "Histogramas por variable",
+       x = "", y = "Frecuencia")
+```
+
+A continuacion se presentan los histogramas
+
+```{r expoloracion03, echo=TRUE}
+# Estadísticos descriptivos
+resumen01 <- psych::describe(df_wineQ01)
+
+# Mostrar tabla formateada
+kable(resumen01, caption = "Resumen descriptivo de Variables Vino 01", digits = 2)
+
+```
+
+Se procede ahora a preparar el conjunto de datos para el analisis de arbol y convertir `quality` en factor para q `rpart` lo interprete bien:
+
+```{r preparacion01, echo=TRUE}
+df_wine <- df_wineQ01 %>%
+  dplyr::select(-Id) %>% # Quita la columna 'Id' (la columna de identificación)
+  dplyr::mutate(quality = as.factor(quality)) # Convierte la columna 'quality' a tipo factor
+```
+
+Se crean ahora los conjuntos de entrenamiento y pruebas, teniendo una semilla para que sea reproducible
+
+```{r preparacion02, echo=TRUE}
+set.seed(1234)
+
+# Definicion conjunto de Entrenamiento (Train) 
+wineQ_train <- sample_n(df_wine, 750)
+
+# Definicion conjunto de Validacion (Validation) 
+wineQ_valdtn <- sample_n(df_wine, 300)
+
+# Definicion conjunto de Prueba (Test) 
+wineQ_test <- sample_n(df_wine, 93)
+
+```
+
+### Entrenamiento y Prueba del Modelo 
+
+Una vez definidos los conjuntos de datos, se procede a entrenar el modelo:
+
+```{r entrenamiento01, echo=TRUE}
+
+arbolWineTrn <- rpart(quality ~ ., data=wineQ_train, method="class") 
+#quality es campo clasificacion
+arbolWineTrn
+
+```
+
+Del anterior se puede ver el esquema de arbol de clasificacion, cada linea presenta uno de los nodos y la regla de clasificacion correspondiente {@ref(Ref01)}
+
+De forma visual el resultado del arbol es el siguiente: 
+
+```{r entrenamiento02, echo=TRUE}
+rpart.plot(arbolWineTrn)
+
+```
+
+De dicha imagen, en cada cuadro se evidencian 3 lineas de numeros:  
+  
+* **1er nivel:** etiqueta, categoria o Factor al que corresponde el mayor porcentaje relacionada.    
+* **2o nivel:** proporcion de casos que pertenece cada categoria, porcentaje de casos al que pertenece.   
+* **3r nivel:** porcentaje del total de los datos que se agrupa en esa clasificacion.  
+
+   
+Una vez con el modelo definido, se procede a realizar el desarrollo de prediccion con la funcion `predict` haciendo uso del conjunto de validación. 
+
+```{r entrenamiento03, echo=TRUE}
+arbolPrediccion_01 <- predict(arbolWineTrn, newdata=wineQ_valdtn, type="class")
+print("A continuacion las primeras 10 predicciones del modelo\n")
+head(arbolPrediccion_01, 10)
+print("\n A continuacion las primeras 10 predicciones del modelo\n")
+head(wineQ_valdtn[["quality"]], 10)
+```
+
+Tomando los resultados de la predicción, y comparado estos con los datos del conjunto de validacion, se evidencian diferencias entre los primeros 10 registros de ambos conjuntos.
+
+Luego, se procede a realizar el analisis de los resultados comparando los datos de la prediccion con los datos reales del conjunto de validacion generando la matriz de confusion con base en las referencias de la siguiente imagen
+
+![](https://live.staticflickr.com/65535/48051372813_0e6a4a0806_b.jpg){width=80%}
+
+```{r entrenamiento04, echo=TRUE}
+confusionMatrix(arbolPrediccion_01, wineQ_valdtn[["quality"]])
+
+```
+
+De la anterior matriz de confusion, para el caso del parametro de calidad 5, se puede observar en la imagen para la matriz de confusion que:
+
+* Verdaderos Positivos (TP, si y si): son aquellos valores pronosticados como calidad 5 por el modelo y que efectivamente son calidad 5. Corresponden al cruce de la fila y columna 5, totalizan 96 concidencias y se muestran en el recuadro **<span style="color:#4A90E2">azul</span>**-  
+
+* Falsos Positivos (FP si pero no): son aquellos valores pronosticados como calidad 5 por el modelo yq eu corresponden a otras calidades segun el conjunto de validacion. Corresponden a los elementos de la fila 5 de columnas diferentes (3, 4, 6, 7, 8), totalizan 29 y se muestran en los recuadros **<span style="color:#FF5A00">naranjas</span>**.   
+
+* Falsos Negativos (FN no pero si): son aquellos valores pronosticados como calidades diferentes a 5 por el modelo y que en realidad corresponde a dicha calidad segun el conjunto de validacion. Corresponden a los elementos de la columna 5 de filas diferentes (3, 4, 6, 7, 8), totalizan 45 y se muestran en los recuadros **<span style="color:#FFB800">amarillos</span>**.  
+
+* Verdaderos Positivos (TN no y no): son aquellos valores pronosticados como calidades diferentes a 5 por el modelo y que efectivamente no corresponden a dicha calidad segun el conjunto de validacion. Corresponden a los elementos diferentes de la columna y fila 5, totalizan 130 y se muestran en los recuadros **<span style="color:#7ED321">verde</span>**.  
+
+![](https://github.com/aosoriom7/MER_AED_2025I/blob/main/imagenes/MatrizConfusion_01.png?raw=true){width=50%}
+
+### Resultados
+
+A fin de entender mas los detalles de la matriz de confusion se procede a contar los registros con `quality` igual a 5 en el conjunto de entrenamiento `wineQ_valdtn` y de prediccion `arbolPrediccion_01`
+
+```{r entrenamiento05, echo=TRUE}
+df_wineQ_valdtn_filter <- wineQ_valdtn %>%
+  filter(quality == 5) 
+
+cant_valdtn <- nrow(df_wineQ_valdtn_filter)  # Sumar los conteos
+cant_valdtn
+
+```
+______________________________________________________
+## Conjunto de Datos 2 - Calidad (H, M, L)
+
+### Exploracion y Preparacion de Datos
+
+A continuacion se presentan el segundo conjunto de datos para profundizar en el metodo: 
+
+```{r exploracion01b, echo=TRUE}
+str(df_wineQ02)
+summary(df_wineQ02)
+
+```
+
+
+```{r exploracion02b, echo=TRUE}
+df_wineQ02_long <- df_wineQ02 %>%
+  pivot_longer(cols = where(is.numeric), names_to = "Variable", values_to = "Valor")
+
+ggplot(df_wineQ02_long, aes(x = Valor)) +
+  geom_histogram(fill = "steelblue", color = "white", bins = 30) +
+  facet_wrap(~ Variable, scales = "free", ncol = 3) +
+  theme_minimal() +
+  labs(title = "Histogramas por variable",
+       x = "", y = "Frecuencia")
+```
+
+A continuacion se presentan los histogramas
+
+```{r expoloracion03b, echo=TRUE}
+# Estadísticos descriptivos
+resumen01b <- psych::describe(df_wineQ02)
+
+# Mostrar tabla formateada
+kable(resumen01b, caption = "Resumen descriptivo de Variables Vino 02", digits = 2)
+
+```
+
+Se procede ahora a preparar el conjunto de datos para el analisis de arbol y convertir `quality_label` en factor para q `rpart` lo interprete bien:
+
+```{r preparacion01b, echo=TRUE}
+df_wine02 <- df_wineQ02 %>%
+  dplyr::mutate(quality_label = as.factor(quality_label)) # Convierte la columna 'quality' a tipo factor
+```
+
+Se crean ahora los conjuntos de entrenamiento y pruebas, teniendo una semilla para que sea reproducible
+
+```{r preparacion02b, echo=TRUE}
+set.seed(1234)
+
+# Definicion conjunto de Entrenamiento (Train) 
+wineQ02_train <- sample_n(df_wine02, 700)
+
+# Definicion conjunto de Validacion (Validation) 
+wineQ02_valdtn <- sample_n(df_wine02, 200)
+
+# Definicion conjunto de Prueba (Test) 
+wineQ02_test <- sample_n(df_wine02, 100)
+
+```
+
+### Entrenamiento y Prueba del Modelo 
+
+Una vez definidos los conjuntos de datos, se procede a entrenar el modelo:
+
+```{r entrenamiento01b, echo=TRUE}
+
+arbolWineTrn02 <- rpart(quality_label ~ ., data=wineQ02_train, method="class") 
+#quality es campo clasificacion
+arbolWineTrn02
+
+```
+
+Del anterior se puede ver el esquema de arbol de clasificacion, cada linea presenta uno de los nodos y la regla de clasificacion correspondiente {@ref(Ref01)}
+
+De forma visual el resultado del arbol es el siguiente: 
+
+```{r entrenamiento02b, echo=TRUE}
+rpart.plot(arbolWineTrn02)
+
+```
+
+Una vez con el modelo definido, se procede a realizar el desarrollo de prediccion con la funcion `predict` haciendo uso del conjunto de validación. 
+
+```{r entrenamiento03b, echo=TRUE}
+arbolPrediccion_02 <- predict(arbolWineTrn02, newdata=wineQ02_valdtn, type="class")
+print("A continuacion las primeras 10 predicciones del modelo\n")
+head(arbolPrediccion_02, 10)
+print("\n A continuacion las primeras 10 predicciones del modelo\n")
+head(wineQ02_valdtn[["quality_label"]], 10)
+```
+
+Tomando los resultados de la predicción, y comparado estos con los datos del conjunto de validacion, se evidencian diferencias entre los primeros 10 registros de ambos conjuntos.
+
+Luego, se procede a realizar el analisis de los resultados comparando los datos de la prediccion con los datos reales del conjunto de validacion generando la matriz de confusion:
+
+```{r entrenamiento04b, echo=TRUE}
+confusionMatrix(arbolPrediccion_02, wineQ02_valdtn[["quality_label"]])
+
+```
+
+### Resultados
+
+# Referencias
+
+1. [Introduction to R markdown](https://rmarkdown.rstudio.com/articles_intro.html){#Ref01}
+1. [MarkDown Guide - Basic Syntax](https://www.markdownguide.org/basic-syntax/){#Ref02}
+1. [Data Visualization CheatSheet](https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf)
+1. [Repositorio del Taller en Github](https://github.com/aosoriom7/MER_AED_2025I) 
+1. [Pagina web del taller en Gihub Pages](https://aosoriom7.github.io/MER_AED_2025I/scripts/T04_Final_AEDatos.html) 
+1. [Arboles de decisión con R - Clasificación](https://rpubs.com/jboscomendoza/arboles_decision_clasificacion){#Ref06}
+1. [Conjunto de Datos](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset?resource=download)
+1. [Programacion en R](https://rsanchezs.gitbooks.io/rprogramming/content/chapter9/dplyr.html)
+1. [tidyverse](https://www.tidyverse.org/)
+1. [Aprendizaje Supervisado en R](https://fervilber.github.io/Aprendizaje-supervisado-en-R/arboles.html)
+1. [Comandos Basicos de la sintaxis de Markdown](https://rpubs.com/gustavomtzv/862622)
+1. [Manual de Analisis Predictivo](https://rpubs.com/paraneda/predictivo)
+1. [Package rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf)
